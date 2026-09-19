@@ -1,4 +1,4 @@
-# Email siganture Tool
+# Email signature Tool
 
 ![](./public/template.png)
 

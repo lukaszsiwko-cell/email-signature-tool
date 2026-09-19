@@ -15,7 +15,7 @@ This is the audit trail for the first production deployment, per `context/founda
 
 ## Scope decision (confirmed with user)
 
-- **Deploy trigger**: Cloudflare Workers Builds' native Git integration (configured once in the Cloudflare dashboard) handles auto-deploy on every push to `master`. This is **not** a GitHub Actions job — `.github/workflows/ci.yml` is untouched and continues to run lint/`astro check`/build/smoke only. Deploy is entirely Cloudflare-managed infrastructure, separate from GitHub Actions.
+- **Deploy trigger**: Cloudflare Workers Builds' native Git integration (configured once in the Cloudflare dashboard) handles auto-deploy on every push to `main`. This is **not** a GitHub Actions job — `.github/workflows/ci.yml` is untouched and continues to run lint/`astro check`/build/smoke only. Deploy is entirely Cloudflare-managed infrastructure, separate from GitHub Actions.
 - **Supabase for this first deploy**: hosted **Supabase Cloud** project, not the self-hosted instance `infrastructure.md` ultimately recommends. This unblocks a fast first deploy; the self-hosted + Hyperdrive + Cloudflare Tunnel path (and its associated risk register in `infrastructure.md`) is deferred until the project actually migrates off Supabase Cloud — see [Risk Carry-Forward](#risk-carry-forward) below.
 
 ## Pre-flight config check (already verified, no changes needed)
@@ -96,10 +96,10 @@ Values can't be read back afterward, only overwritten with the same commands.
 ## Step 4 — Human-only: connect Cloudflare Workers Builds for auto-deploy-on-push
 
 1. Dashboard → Workers & Pages → this Worker → **Settings → Build → Connect to Git** (or **Create → Connect to Git** if setting up fresh).
-2. Authorize Cloudflare's GitHub App for this repository, select the repo, and set the **production branch** to `master`.
+2. Authorize Cloudflare's GitHub App for this repository, select the repo, and set the **production branch** to `main`.
 3. Set the **build command** to `npm run build` and the **deploy command** to `npx wrangler deploy` (or accept Cloudflare's auto-detected Astro/Workers build settings — verify they match).
 4. Confirm the Secret-type variables from Step 3b are attached to the **Production** environment (Workers Builds environments are separate from what `wrangler secret put` sets locally).
-5. Save. From this point on, every push to `master` triggers a Cloudflare-managed build + deploy automatically — no GitHub Actions involvement.
+5. Save. From this point on, every push to `main` triggers a Cloudflare-managed build + deploy automatically — no GitHub Actions involvement.
 
 ## Step 5 — Verification (agent or human, after Steps 1–4 are complete)
 
@@ -110,7 +110,7 @@ Values can't be read back afterward, only overwritten with the same commands.
    ```bash
    BASE_URL=https://<your-worker>.workers.dev npm run smoke
    ```
-5. Push a trivial commit to `master` and confirm in the Cloudflare dashboard (Workers & Pages → Deployments) that a new build was triggered automatically by Workers Builds — this is the check that auto-deploy-on-push is actually wired, not just configured.
+5. Push a trivial commit to `main` and confirm in the Cloudflare dashboard (Workers & Pages → Deployments) that a new build was triggered automatically by Workers Builds — this is the check that auto-deploy-on-push is actually wired, not just configured.
 6. Rollback check (optional but recommended once): trigger `wrangler rollback [deployment-id]` or use the dashboard "Rollback" button on a non-critical deployment to confirm the rollback path works before relying on it in an incident.
 
 ## Risk Carry-Forward
