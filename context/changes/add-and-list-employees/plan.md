@@ -358,9 +358,9 @@ Pre-existing deployed accounts (signed up before this change) have no `profiles`
 
 #### Automated
 
-- [x] 1.1 `npx supabase db reset` applies migration and seed cleanly
-- [x] 1.2 `select count(*) from public.departments;` returns 4 after reset
-- [x] 1.3 `npx astro check` passes with no new type errors
+- [x] 1.1 `npx supabase db reset` applies migration and seed cleanly — 21737b4
+- [x] 1.2 `select count(*) from public.departments;` returns 4 after reset — 21737b4
+- [x] 1.3 `npx astro check` passes with no new type errors — 21737b4
 
 #### Manual
 
@@ -371,14 +371,14 @@ Pre-existing deployed accounts (signed up before this change) have no `profiles`
 
 #### Automated
 
-- [ ] 2.1 `npx astro check` and `npm run lint` pass
-- [ ] 2.2 `npm run build` succeeds
+- [x] 2.1 `npx astro check` and `npm run lint` pass
+- [x] 2.2 `npm run build` succeeds
 
 #### Manual
 
-- [ ] 2.3 Signup without a department selection is blocked client-side
-- [ ] 2.4 Signup with a department creates a profiles row with the correct department_id
-- [ ] 2.5 Signup with a tampered/invalid department id fails cleanly (no 500/stack trace)
+- [x] 2.3 Signup without a department selection is blocked client-side
+- [x] 2.4 Signup with a department creates a profiles row with the correct department_id
+- [x] 2.5 Signup with a tampered/invalid department id fails cleanly (no 500/stack trace)
 
 ### Phase 3: Employee service layer and API
 

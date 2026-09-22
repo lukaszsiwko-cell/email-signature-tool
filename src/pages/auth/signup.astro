@@ -1,8 +1,24 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { createClient } from "@/lib/supabase";
 
 const error = Astro.url.searchParams.get("error");
+interface DepartmentOption {
+  id: string;
+  name: string;
+}
+
+let departments: DepartmentOption[] = [];
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+if (supabase) {
+  const { data, error: departmentsError } = await supabase.from("departments").select("id, name").order("name");
+
+  if (!departmentsError) {
+    departments = data;
+  }
+}
 ---
 
 <Layout title="Sign up">
@@ -11,7 +27,7 @@ const error = Astro.url.searchParams.get("error");
       <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
         Sign up
       </h1>
-      <SignUpForm serverError={error} client:load />
+      <SignUpForm serverError={error} departments={departments} client:load />
       <p class="mt-4 text-center text-sm text-blue-100/60">
         Already have an account?{" "}
         <a href="/auth/signin" class="text-purple-300 hover:underline">
