@@ -84,3 +84,49 @@ export async function createEmployee(supabase: SupabaseClient, input: CreateEmpl
 
   return toDTO(data);
 }
+
+/**
+ * Updates an employee's fields. Never accepts or writes department_id —
+ * RLS alone determines whether the row is reachable. Returns null when no
+ * row was affected (id not found, or belongs to another department), since
+ * that's indistinguishable from "not found" once RLS hides the row — the
+ * caller maps this to a 404, not a 500.
+ */
+export async function updateEmployee(
+  supabase: SupabaseClient,
+  id: string,
+  input: CreateEmployeeInput,
+): Promise<EmployeeDTO | null> {
+  const { data, error } = await supabase
+    .from("employees")
+    .update({
+      first_name: input.firstName,
+      last_name: input.lastName,
+      position: input.position,
+      phone: input.phone,
+    })
+    .eq("id", id)
+    .select("id, first_name, last_name, position, phone, created_at")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? toDTO(data) : null;
+}
+
+/**
+ * Deletes an employee. Returns false when no row was affected (id not
+ * found, or belongs to another department) so the caller can map this to a
+ * 404 rather than treating it as a generic error.
+ */
+export async function deleteEmployee(supabase: SupabaseClient, id: string): Promise<boolean> {
+  const { data, error } = await supabase.from("employees").delete().eq("id", id).select("id").maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data !== null;
+}
