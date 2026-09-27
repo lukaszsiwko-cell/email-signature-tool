@@ -338,4 +338,4 @@ No data migration needed for existing rows — `departments.logo_url` is current
 ### Phase 4: Smoke test coverage for logo upload/remove + isolation
 
 #### Automated
-- [x] 4.1 `npm run smoke` passes, including new logo upload/replace/remove/isolation checks
+- [x] 4.1 `npm run smoke` passes, including new logo upload/replace/remove/isolation checks — fd58fbf
