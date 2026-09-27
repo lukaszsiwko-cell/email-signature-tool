@@ -2,7 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
 import AddEmployeeForm from "@/components/employees/AddEmployeeForm";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import EmployeeTable from "@/components/employees/EmployeeTable";
 import { createClient } from "@/lib/supabase";
 import { listEmployees } from "@/lib/services/employees";
 import type { EmployeeDTO } from "@/types";
@@ -38,26 +38,7 @@ if (supabase) {
           ) : employees.length === 0 ? (
             <p class="text-sm text-blue-100/60">No employees yet. Add your first employee above.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-blue-100/70">First name</TableHead>
-                  <TableHead className="text-blue-100/70">Last name</TableHead>
-                  <TableHead className="text-blue-100/70">Position</TableHead>
-                  <TableHead className="text-blue-100/70">Phone</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {employees.map((employee) => (
-                  <TableRow className="border-white/10 hover:bg-white/5">
-                    <TableCell className="text-white">{employee.firstName}</TableCell>
-                    <TableCell className="text-white">{employee.lastName}</TableCell>
-                    <TableCell className="text-white">{employee.position}</TableCell>
-                    <TableCell className="text-white">{employee.phone}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <EmployeeTable employees={employees} client:load />
           )}
         </div>
       </div>
