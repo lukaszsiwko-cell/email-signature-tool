@@ -44,7 +44,7 @@ Help desk/IT staff at a company lose time manually setting up email signatures f
 | F-01 | department-scoped-data-foundation   | (foundation) departments/employees schema + RLS + user-department linkage      | —                | FR-001, FR-002, FR-003, Access Control | ready    |
 | S-01 | add-and-list-employees              | add a new employee and see the list of employees in their own department       | F-01            | FR-002, FR-003, US-01             | done |
 | S-02 | edit-and-delete-employee            | edit or delete an existing employee record in their own department             | S-01             | FR-003                            | done |
-| S-03 | set-department-logo                 | set/update the logo/graphic used for their department's signatures             | F-01            | FR-008                            | proposed |
+| S-03 | set-department-logo                 | set/update the logo/graphic used for their department's signatures             | F-01            | FR-008                            | in-progress |
 | S-04 | generate-signature-scripts          | generate Outlook + Thunderbird signature scripts for an employee, branded with the department logo | S-01, S-03 (parallel) | FR-004, FR-005, US-01       | blocked  |
 | S-05 | email-signature-scripts-to-employee | (new employee) receive both scripts by email with instructions and run one to configure their signature | S-04            | FR-006, FR-007, US-01             | proposed |
 
@@ -123,7 +123,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Low complexity, but must never let a department see or overwrite another department's logo — same isolation boundary as F-01, just applied to a file/asset instead of a row.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-04: Generate Outlook + Thunderbird signature scripts
 

@@ -15,8 +15,8 @@ description: >
 This skill is the second link in the bootstrap chain. For greenfield: `/10x-shape → /10x-prd → 10x-tech-stack-selector → bootstrapper`. For brownfield: `/10x-shape → /10x-prd → 10x-stack-assess → 10x-health-check`. Its single job: take a shaped notes file and emit a `context/foundation/prd.md` that conforms to the locked PRD schema, routing every gap to `## Open Questions` rather than inventing content.
 
 The skill auto-routes to the correct template based on `context_type` in the input:
-- **greenfield** → 11-section PRD template (product built from scratch)
-- **brownfield** → 12-section PRD template (delta-change to an existing system)
+- **greenfield** → 10-section PRD template (product built from scratch)
+- **brownfield** → 11-section PRD template (delta-change to an existing system)
 
 The skill is a **document generator**, not a discovery facilitator. It NEVER invents domain decisions, business-logic rules, success criteria, or user stories. Anything missing in the input goes verbatim into `## Open Questions` so a human can resolve it.
 
@@ -61,11 +61,10 @@ If the file exists, read it FULLY (no `limit`/`offset`) and proceed to Step 1.5.
 
 If the file does not exist, ask the user:
 
-"No input file found at `<resolved-path>`. How would you like to proceed?"
+**Input?** No input file found at `<resolved-path>`. How would you like to proceed?
 
-Options:
 - **Run /10x-shape first (Recommended)**: Stop here. Run `/10x-shape` to produce shape-notes.md, then re-invoke `/10x-prd`.
-- **Paste raw notes**: I'll wait for you to paste any notes you have. The thin-input check will warn about missing signals.
+- **Paste raw notes**: Wait for the user to paste any notes they have. The thin-input check will warn about missing signals.
 - **Cancel**: Exit without changes.
 
 On "Run /10x-shape first": print "Stopping. Run `/10x-shape` to produce shape-notes.md, then re-invoke `/10x-prd`." and STOP.
@@ -83,13 +82,10 @@ Determine whether to generate a greenfield or brownfield PRD:
 
    Use the same multi-signal detection as `/10x-shape` (Step 0.7): check for git history (Tier 1), lockfiles (Tier 2), manifest files (Tier 3), and bonus signals (source dirs, framework configs). Any Tier 1 or Tier 2 hit → propose brownfield. Tier 3 only → propose brownfield with ambiguity flag. No signals → propose greenfield.
 
-   Confirm with the user:
-
    Ask the user:
 
-   "No context_type found in the input. Based on cwd markers, this looks like [greenfield|brownfield]. Correct?"
+   **Context** No context_type found in the input. Based on cwd markers, this looks like [greenfield|brownfield]. Correct?
 
-   Options:
    - **[Detected mode] — correct (Recommended)**: Generate a [greenfield|brownfield] PRD.
    - **[Other mode] — override**: Generate a [other] PRD instead.
 
@@ -140,9 +136,8 @@ time to run /10x-shape first, the resulting PRD will be substantially stronger.
 
 Then ask the user:
 
-"How would you like to proceed?"
+**Thin input** How would you like to proceed?
 
-Options:
 - **Run /10x-shape first (Recommended)**: Stop here. Use `/10x-shape` to fill in the missing signals, then re-invoke `/10x-prd`.
 - **Proceed anyway**: Generate the PRD from what's there. Missing pieces land in `## Open Questions` verbatim.
 - **Cancel**: Exit without changes.
@@ -162,7 +157,7 @@ Populate every required frontmatter field per the schema:
 - `project` — extract from input frontmatter `project:` if present; otherwise from a Title heading (`# <Project>`); otherwise `# TODO: project — see Open Questions`.
 - `version` — `1` for the first PRD this skill writes. The collision step (Step 4) bumps this if the user picks a versioned save.
 - `status` — `draft`. Never promote to `reviewed`/`locked`; that's a downstream decision.
-- `created` — today's date in `YYYY-MM-DD` (use the system date command, such as `date +%Y-%m-%d`).
+- `created` — today's date in `YYYY-MM-DD` (use `date +%Y-%m-%d`).
 - `context_type` — `greenfield` or `brownfield` (from Step 1.5).
 - `product_type` — pull from input if available; otherwise `# TODO: product_type — see Open Questions` (and add an Open Question entry).
 - `target_scale`, `timeline_budget` — same rule. If the input has the field, copy it verbatim; if not, emit `# TODO: <field> — see Open Questions` and add a matching Open Question. For brownfield, `timeline_budget` uses `delivery_weeks` instead of `mvp_weeks`.
@@ -293,9 +288,8 @@ If the file does not exist, write to `context/foundation/prd.md` and proceed to 
 
 If the file exists, ask the user:
 
-"context/foundation/prd.md already exists. How would you like to proceed?"
+**Collision** context/foundation/prd.md already exists. How would you like to proceed?
 
-Options:
 - **Save as prd-vN.md (Recommended)**: Preserve history. The new PRD lands at the next available prd-vN.md slot. The unversioned prd.md is unchanged.
 - **Overwrite prd.md**: Replace the existing prd.md. The prior version is lost (unless you've committed it).
 - **Abort**: Exit without writes. No collision resolution.
@@ -318,7 +312,7 @@ After the write lands, summarize what was produced:
   Project:          [project from frontmatter]
   Context type:     [greenfield | brownfield]
   Path:             [context/foundation/prd.md | context/foundation/prd-vN.md]
-  Schema sections:  [11 / 11 | 12 / 12] present
+  Schema sections:  [10 / 10 | 11 / 11] present
   Frontmatter:      <K populated, M as TODO>  (8 keys total)
   Open Questions:   <count> entries
 

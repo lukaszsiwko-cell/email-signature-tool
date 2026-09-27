@@ -3,7 +3,6 @@ import { AlertTriangle, CircleAlert, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { EmployeeDTO } from "@/types";
 
 // Optional field — per the PRD's warn, never block rule, an invalid shape
@@ -34,12 +33,6 @@ interface DraftErrors {
 interface EmployeeTableProps {
   employees: EmployeeDTO[];
 }
-
-const fieldClass = (hasError: boolean) =>
-  cn(
-    "h-8 border bg-white/10 text-white placeholder:text-white/40 focus-visible:ring-purple-400",
-    hasError ? "border-red-400/60 focus-visible:ring-red-400" : "border-white/20",
-  );
 
 export default function EmployeeTable({ employees }: EmployeeTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -151,12 +144,12 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
   return (
     <Table>
       <TableHeader>
-        <TableRow className="border-white/10 hover:bg-transparent">
-          <TableHead className="text-blue-100/70">First name</TableHead>
-          <TableHead className="text-blue-100/70">Last name</TableHead>
-          <TableHead className="text-blue-100/70">Position</TableHead>
-          <TableHead className="text-blue-100/70">Phone</TableHead>
-          <TableHead className="text-blue-100/70">Actions</TableHead>
+        <TableRow className="border-border hover:bg-transparent">
+          <TableHead className="text-muted-foreground">First name</TableHead>
+          <TableHead className="text-muted-foreground">Last name</TableHead>
+          <TableHead className="text-muted-foreground">Position</TableHead>
+          <TableHead className="text-muted-foreground">Phone</TableHead>
+          <TableHead className="text-muted-foreground">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -165,20 +158,21 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
           const isConfirmingDelete = confirmingDeleteId === employee.id;
 
           return (
-            <TableRow key={employee.id} className="border-white/10 hover:bg-white/5">
+            <TableRow key={employee.id} className="border-border hover:bg-accent/50">
               {isEditing ? (
                 <>
                   <TableCell>
                     <Input
+                      className="h-8"
                       value={draft.firstName}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, firstName: e.target.value }));
                         clearDraftError("firstName");
                       }}
-                      className={fieldClass(Boolean(draftErrors.firstName))}
+                      aria-invalid={Boolean(draftErrors.firstName)}
                     />
                     {draftErrors.firstName ? (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-red-300">
+                      <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
                         <CircleAlert className="size-3" />
                         {draftErrors.firstName}
                       </p>
@@ -186,15 +180,16 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                   </TableCell>
                   <TableCell>
                     <Input
+                      className="h-8"
                       value={draft.lastName}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, lastName: e.target.value }));
                         clearDraftError("lastName");
                       }}
-                      className={fieldClass(Boolean(draftErrors.lastName))}
+                      aria-invalid={Boolean(draftErrors.lastName)}
                     />
                     {draftErrors.lastName ? (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-red-300">
+                      <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
                         <CircleAlert className="size-3" />
                         {draftErrors.lastName}
                       </p>
@@ -202,15 +197,16 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                   </TableCell>
                   <TableCell>
                     <Input
+                      className="h-8"
                       value={draft.position}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, position: e.target.value }));
                         clearDraftError("position");
                       }}
-                      className={fieldClass(Boolean(draftErrors.position))}
+                      aria-invalid={Boolean(draftErrors.position)}
                     />
                     {draftErrors.position ? (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-red-300">
+                      <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
                         <CircleAlert className="size-3" />
                         {draftErrors.position}
                       </p>
@@ -218,11 +214,11 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                   </TableCell>
                   <TableCell>
                     <Input
+                      className="h-8"
                       value={draft.phone}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, phone: e.target.value }));
                       }}
-                      className={fieldClass(false)}
                     />
                     {phoneHint}
                   </TableCell>
@@ -236,36 +232,28 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                           onClick={() => {
                             void saveEdit(employee.id);
                           }}
-                          className="bg-purple-600 text-white hover:bg-purple-500"
                         >
                           {isSaving ? "Saving..." : "Save"}
                         </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={isSaving}
-                          onClick={cancelEdit}
-                          className="border-white/20 bg-white/10 text-white hover:bg-white/20"
-                        >
+                        <Button type="button" size="sm" variant="outline" disabled={isSaving} onClick={cancelEdit}>
                           Cancel
                         </Button>
                       </div>
-                      {rowError ? <p className="text-xs text-red-300">{rowError}</p> : null}
+                      {rowError ? <p className="text-xs text-destructive">{rowError}</p> : null}
                     </div>
                   </TableCell>
                 </>
               ) : (
                 <>
-                  <TableCell className="text-white">{employee.firstName}</TableCell>
-                  <TableCell className="text-white">{employee.lastName}</TableCell>
-                  <TableCell className="text-white">{employee.position}</TableCell>
-                  <TableCell className="text-white">{employee.phone}</TableCell>
+                  <TableCell>{employee.firstName}</TableCell>
+                  <TableCell>{employee.lastName}</TableCell>
+                  <TableCell>{employee.position}</TableCell>
+                  <TableCell>{employee.phone}</TableCell>
                   <TableCell>
                     {isConfirmingDelete ? (
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-blue-100/80">Are you sure?</span>
+                          <span className="text-xs text-muted-foreground">Are you sure?</span>
                           <Button
                             type="button"
                             size="sm"
@@ -283,12 +271,11 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                             variant="outline"
                             disabled={isDeleting}
                             onClick={cancelDeleteConfirm}
-                            className="border-white/20 bg-white/10 text-white hover:bg-white/20"
                           >
                             No
                           </Button>
                         </div>
-                        {rowError ? <p className="text-xs text-red-300">{rowError}</p> : null}
+                        {rowError ? <p className="text-xs text-destructive">{rowError}</p> : null}
                       </div>
                     ) : (
                       <div className="flex gap-2">
@@ -299,7 +286,6 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                           onClick={() => {
                             startEdit(employee);
                           }}
-                          className="border-white/20 bg-white/10 text-white hover:bg-white/20"
                         >
                           <Pencil className="size-3.5" />
                           Edit
@@ -311,7 +297,6 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                           onClick={() => {
                             startDeleteConfirm(employee.id);
                           }}
-                          className="border-white/20 bg-white/10 text-white hover:bg-white/20"
                         >
                           <Trash2 className="size-3.5" />
                           Delete

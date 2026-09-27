@@ -3,7 +3,6 @@ import { AlertTriangle, CircleAlert, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
 const ALLOWED_FILE_TYPES = ["image/png", "image/jpeg", "image/svg+xml"];
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
@@ -11,12 +10,6 @@ const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 interface DepartmentLogoManagerProps {
   initialLogoUrl: string | null;
 }
-
-const fieldClass = (hasError: boolean) =>
-  cn(
-    "border bg-white/10 text-white file:text-white focus-visible:ring-purple-400",
-    hasError ? "border-red-400/60 focus-visible:ring-red-400" : "border-white/20",
-  );
 
 function validateFile(file: File | null, requireSelection: boolean): string | null {
   if (!file) {
@@ -143,24 +136,24 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
   }
 
   return (
-    <section className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+    <section className="mb-8 rounded-2xl border border-border bg-card p-6 backdrop-blur-sm">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white">Department logo</h2>
-        <p className="mt-1 text-sm text-blue-100/70">
+        <h2 className="text-lg font-semibold text-foreground">Department logo</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Upload the image used across signatures for everyone in your department.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-white/10">
+        <div className="overflow-hidden rounded-xl border border-border bg-muted">
           {initialLogoUrl ? (
             <img
               src={initialLogoUrl}
               alt="Current department logo"
-              className="h-40 w-full bg-white/5 object-contain p-4"
+              className="h-40 w-full bg-muted object-contain p-4"
             />
           ) : (
-            <div className="flex h-40 items-center justify-center px-4 text-center text-sm text-blue-100/70">
+            <div className="flex h-40 items-center justify-center px-4 text-center text-sm text-muted-foreground">
               No logo set
             </div>
           )}
@@ -168,7 +161,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
 
         <form onSubmit={handleUpload} className="space-y-4" noValidate>
           <div>
-            <Label htmlFor="department-logo" className="mb-1 block text-sm text-blue-100/80">
+            <Label htmlFor="department-logo" className="mb-1 block text-sm text-muted-foreground">
               Logo file
             </Label>
             <Input
@@ -177,7 +170,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
               accept="image/png,image/jpeg,image/svg+xml"
               disabled={isBusy}
               onChange={handleFileChange}
-              className={fieldClass(Boolean(fileError))}
+              aria-invalid={Boolean(fileError)}
             />
             <p className="mt-1 flex items-center gap-1 text-xs text-yellow-300">
               <AlertTriangle className="size-3" />
@@ -186,14 +179,14 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
           </div>
 
           {errorMessage ? (
-            <p className="flex items-center gap-2 text-sm text-red-300">
+            <p className="flex items-center gap-2 text-sm text-destructive">
               <CircleAlert className="size-4 shrink-0" />
               {errorMessage}
             </p>
           ) : null}
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="submit" disabled={isBusy} className="bg-purple-600 text-white hover:bg-purple-500">
+            <Button type="submit" disabled={isBusy}>
               {isUploading ? (
                 "Uploading..."
               ) : (
@@ -207,7 +200,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
             {initialLogoUrl ? (
               isConfirmingRemove ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-blue-100/80">Are you sure?</span>
+                  <span className="text-xs text-muted-foreground">Are you sure?</span>
                   <Button
                     type="button"
                     size="sm"
@@ -219,25 +212,12 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
                   >
                     {isRemoving ? "Removing..." : "Yes"}
                   </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={isBusy}
-                    onClick={cancelRemoveConfirm}
-                    className="border-white/20 bg-white/10 text-white hover:bg-white/20"
-                  >
+                  <Button type="button" size="sm" variant="outline" disabled={isBusy} onClick={cancelRemoveConfirm}>
                     No
                   </Button>
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isBusy}
-                  onClick={startRemoveConfirm}
-                  className="border-white/20 bg-white/10 text-white hover:bg-white/20"
-                >
+                <Button type="button" variant="outline" disabled={isBusy} onClick={startRemoveConfirm}>
                   <Trash2 className="size-4" />
                   Remove logo
                 </Button>

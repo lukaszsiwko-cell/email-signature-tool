@@ -28,10 +28,8 @@ if (supabase) {
   <div class="bg-cosmic min-h-screen p-4">
     <div class="mx-auto max-w-3xl">
       <Topbar />
-      <div class="rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
-        <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
-          Employees
-        </h1>
+      <div class="rounded-2xl border border-border bg-card p-8 text-foreground backdrop-blur-xl">
+        <h1 class="mb-6 text-2xl font-bold text-foreground">Employees</h1>
 
         <DepartmentLogoManager initialLogoUrl={initialLogoUrl} client:load />
 
@@ -39,9 +37,11 @@ if (supabase) {
 
         <div class="mt-8">
           {loadError ? (
-            <p class="rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">{loadError}</p>
+            <p class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {loadError}
+            </p>
           ) : employees.length === 0 ? (
-            <p class="text-sm text-blue-100/60">No employees yet. Add your first employee above.</p>
+            <p class="text-sm text-muted-foreground">No employees yet. Add your first employee above.</p>
           ) : (
             <EmployeeTable employees={employees} client:load />
           )}

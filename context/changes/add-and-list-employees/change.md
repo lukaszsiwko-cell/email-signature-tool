@@ -1,9 +1,9 @@
 ---
 change_id: add-and-list-employees
 title: Add a new employee and list employees in own department
-status: implementing
+status: impl_reviewed
 created: 2026-09-22
-updated: 2026-09-22
+updated: 2026-09-23
 archived_at: null
 ---
 

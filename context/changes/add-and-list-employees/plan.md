@@ -371,14 +371,14 @@ Pre-existing deployed accounts (signed up before this change) have no `profiles`
 
 #### Automated
 
-- [x] 2.1 `npx astro check` and `npm run lint` pass
-- [x] 2.2 `npm run build` succeeds
+- [x] 2.1 `npx astro check` and `npm run lint` pass — 467e895
+- [x] 2.2 `npm run build` succeeds — 467e895
 
 #### Manual
 
-- [x] 2.3 Signup without a department selection is blocked client-side
-- [x] 2.4 Signup with a department creates a profiles row with the correct department_id
-- [x] 2.5 Signup with a tampered/invalid department id fails cleanly (no 500/stack trace)
+- [x] 2.3 Signup without a department selection is blocked client-side — 467e895
+- [x] 2.4 Signup with a department creates a profiles row with the correct department_id — 467e895
+- [x] 2.5 Signup with a tampered/invalid department id fails cleanly (no 500/stack trace) — 467e895
 
 ### Phase 3: Employee service layer and API
 

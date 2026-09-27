@@ -30,7 +30,7 @@ No code changes are required before deploying; this plan is purely operational.
 
 ### A. Local environment
 
-1. Use the pinned Node version: `nvm use` (or install Node **v22.14.0** per `.nvmrc` manually).
+1. Use the pinned Node version: `nvm use` (or install Node **26.3.0** per `.nvmrc` manually).
 2. Install project dependencies (also installs Wrangler and the Supabase CLI as devDependencies — no global installs needed): `npm install`.
 3. Verify the versions Wrangler/Supabase CLI resolve to:
    ```bash

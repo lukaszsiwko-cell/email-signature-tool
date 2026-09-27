@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ServerError } from "@/components/auth/ServerError";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 // Optional field — per the PRD's warn, never block rule, an invalid shape
 // only shows a hint and never prevents submission. "Valid" means 9 digits
@@ -23,12 +22,6 @@ interface FormErrors {
   lastName?: string;
   position?: string;
 }
-
-const fieldClass = (hasError: boolean) =>
-  cn(
-    "border bg-white/10 text-white placeholder:text-white/40 focus-visible:ring-purple-400",
-    hasError ? "border-red-400/60 focus-visible:ring-red-400" : "border-white/20",
-  );
 
 export default function AddEmployeeForm() {
   const [firstName, setFirstName] = useState("");
@@ -93,7 +86,7 @@ export default function AddEmployeeForm() {
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="firstName" className="mb-1 block text-sm text-blue-100/80">
+          <Label htmlFor="firstName" className="mb-1 block text-sm text-muted-foreground">
             First name
           </Label>
           <Input
@@ -103,10 +96,10 @@ export default function AddEmployeeForm() {
               setFirstName(e.target.value);
               clearError("firstName");
             }}
-            className={fieldClass(Boolean(errors.firstName))}
+            aria-invalid={Boolean(errors.firstName)}
           />
           {errors.firstName ? (
-            <p className="mt-1 flex items-center gap-1 text-xs text-red-300">
+            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
               <CircleAlert className="size-3" />
               {errors.firstName}
             </p>
@@ -114,7 +107,7 @@ export default function AddEmployeeForm() {
         </div>
 
         <div>
-          <Label htmlFor="lastName" className="mb-1 block text-sm text-blue-100/80">
+          <Label htmlFor="lastName" className="mb-1 block text-sm text-muted-foreground">
             Last name
           </Label>
           <Input
@@ -124,10 +117,10 @@ export default function AddEmployeeForm() {
               setLastName(e.target.value);
               clearError("lastName");
             }}
-            className={fieldClass(Boolean(errors.lastName))}
+            aria-invalid={Boolean(errors.lastName)}
           />
           {errors.lastName ? (
-            <p className="mt-1 flex items-center gap-1 text-xs text-red-300">
+            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
               <CircleAlert className="size-3" />
               {errors.lastName}
             </p>
@@ -136,7 +129,7 @@ export default function AddEmployeeForm() {
       </div>
 
       <div>
-        <Label htmlFor="position" className="mb-1 block text-sm text-blue-100/80">
+        <Label htmlFor="position" className="mb-1 block text-sm text-muted-foreground">
           Position
         </Label>
         <Input
@@ -146,10 +139,10 @@ export default function AddEmployeeForm() {
             setPosition(e.target.value);
             clearError("position");
           }}
-          className={fieldClass(Boolean(errors.position))}
+          aria-invalid={Boolean(errors.position)}
         />
         {errors.position ? (
-          <p className="mt-1 flex items-center gap-1 text-xs text-red-300">
+          <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
             <CircleAlert className="size-3" />
             {errors.position}
           </p>
@@ -157,7 +150,7 @@ export default function AddEmployeeForm() {
       </div>
 
       <div>
-        <Label htmlFor="phone" className="mb-1 block text-sm text-blue-100/80">
+        <Label htmlFor="phone" className="mb-1 block text-sm text-muted-foreground">
           Phone
         </Label>
         <Input
@@ -166,21 +159,16 @@ export default function AddEmployeeForm() {
           onChange={(e) => {
             setPhone(e.target.value);
           }}
-          className={fieldClass(false)}
         />
         {phoneHint}
       </div>
 
       <ServerError message={serverError} />
 
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded-lg bg-purple-600 px-4 py-2 font-medium text-white transition-colors hover:bg-purple-500"
-      >
+      <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? (
           <span className="flex items-center gap-2">
-            <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
             Adding...
           </span>
         ) : (
