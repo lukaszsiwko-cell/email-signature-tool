@@ -303,25 +303,25 @@ No data migration needed for existing rows — `departments.logo_url` is current
 ### Phase 1: Storage bucket and RLS policies
 
 #### Automated
-- [x] 1.1 `npx supabase db reset` applies the new migration cleanly
-- [x] 1.2 `department-logos` bucket is private (`public = false`)
+- [x] 1.1 `npx supabase db reset` applies the new migration cleanly — 551f1b3
+- [x] 1.2 `department-logos` bucket is private (`public = false`) — 551f1b3
 
 #### Manual
-- [x] 1.3 `storage.objects` shows the four new policies; `public.departments` shows the new `UPDATE` policy
-- [x] 1.4 Cross-department object select/insert is rejected
-- [x] 1.5 Cross-department `departments` row update is rejected
+- [x] 1.3 `storage.objects` shows the four new policies; `public.departments` shows the new `UPDATE` policy — 551f1b3
+- [x] 1.4 Cross-department object select/insert is rejected — 551f1b3
+- [x] 1.5 Cross-department `departments` row update is rejected — 551f1b3
 
 ### Phase 2: Service layer and API
 
 #### Automated
-- [ ] 2.1 `npx astro check` and `npm run lint` pass
-- [ ] 2.2 `npm run build` succeeds
+- [x] 2.1 `npx astro check` and `npm run lint` pass
+- [x] 2.2 `npm run build` succeeds
 
 #### Manual
-- [ ] 2.3 `PUT` with a valid PNG under 2MB succeeds and returns a working signed URL
-- [ ] 2.4 `PUT` with an oversized file or disallowed MIME type returns 400
-- [ ] 2.5 Cross-department uploads don't affect each other's logo
-- [ ] 2.6 `DELETE` removes the logo; subsequent read shows "no logo"
+- [x] 2.3 `PUT` with a valid PNG under 2MB succeeds and returns a working signed URL
+- [x] 2.4 `PUT` with an oversized file or disallowed MIME type returns 400
+- [x] 2.5 Cross-department uploads don't affect each other's logo
+- [x] 2.6 `DELETE` removes the logo; subsequent read shows "no logo"
 
 ### Phase 3: UI — logo section on the employees page
 
