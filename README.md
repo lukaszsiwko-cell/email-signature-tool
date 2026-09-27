@@ -168,9 +168,22 @@ This project uses **Cloudflare Workers Builds' native Git integration** for auto
 
 `SUPABASE_URL` and `SUPABASE_KEY` must additionally be set as **Secret**-type variables in the Cloudflare dashboard (Settings → Variables and Secrets) for the Production environment — these are separate from the Wrangler CLI secrets above and from any GitHub Actions secrets.
 
+### Post-deploy one-off: backfilling `profiles` for pre-existing accounts
+
+The department-scoped data model (`profiles.department_id`) was added after this project's first deployment. Accounts that signed up before that migration have no `profiles` row and won't be able to use department-scoped features (employee list, etc.) until one is created for them. Run this once against production data, picking the correct department per user before running it:
+
+```sql
+insert into public.profiles (id, department_id)
+select id, (select id from public.departments where name = 'IT') -- adjust per user before running in production
+from auth.users
+where id not in (select id from public.profiles);
+```
+
+This is a manual, one-off remediation step (per the interview decision) — there is no in-app UI for it.
+
 ## Smoke test
 
-`scripts/smoke.mjs` is a dependency-free Node script that walks the whole auth flow (sign-up, sign-in, protected page, sign-out) over HTTP. Run it against the dev server or the production preview after dependency upgrades:
+`scripts/smoke.mjs` is a dependency-free Node script that walks the whole auth flow (sign-up, sign-in, protected page, sign-out) over HTTP, plus the add/list-employee flow and cross-department data isolation (a second department's account must never see the first department's employees). Run it against the dev server or the production preview after dependency upgrades:
 
 ```bash
 npm run dev            # or: npm run build && npm run preview
