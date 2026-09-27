@@ -314,26 +314,26 @@ No data migration needed for existing rows — `departments.logo_url` is current
 ### Phase 2: Service layer and API
 
 #### Automated
-- [x] 2.1 `npx astro check` and `npm run lint` pass
-- [x] 2.2 `npm run build` succeeds
+- [x] 2.1 `npx astro check` and `npm run lint` pass — 2c69c90
+- [x] 2.2 `npm run build` succeeds — 2c69c90
 
 #### Manual
-- [x] 2.3 `PUT` with a valid PNG under 2MB succeeds and returns a working signed URL
-- [x] 2.4 `PUT` with an oversized file or disallowed MIME type returns 400
-- [x] 2.5 Cross-department uploads don't affect each other's logo
-- [x] 2.6 `DELETE` removes the logo; subsequent read shows "no logo"
+- [x] 2.3 `PUT` with a valid PNG under 2MB succeeds and returns a working signed URL — 2c69c90
+- [x] 2.4 `PUT` with an oversized file or disallowed MIME type returns 400 — 2c69c90
+- [x] 2.5 Cross-department uploads don't affect each other's logo — 2c69c90
+- [x] 2.6 `DELETE` removes the logo; subsequent read shows "no logo" — 2c69c90
 
 ### Phase 3: UI — logo section on the employees page
 
 #### Automated
-- [ ] 3.1 `npx astro check` and `npm run lint` pass
-- [ ] 3.2 `npm run build` succeeds
+- [x] 3.1 `npx astro check` and `npm run lint` pass
+- [x] 3.2 `npm run build` succeeds
 
 #### Manual
-- [ ] 3.3 No-logo placeholder renders; valid upload shows thumbnail after reload
-- [ ] 3.4 Replacing an existing logo shows the new thumbnail after reload
-- [ ] 3.5 Remove-logo inline confirm clears back to placeholder after reload
-- [ ] 3.6 Client-side rejects oversized/wrong-type file before submitting
+- [x] 3.3 No-logo placeholder renders; valid upload shows thumbnail after reload
+- [x] 3.4 Replacing an existing logo shows the new thumbnail after reload
+- [x] 3.5 Remove-logo inline confirm clears back to placeholder after reload
+- [x] 3.6 Client-side rejects oversized/wrong-type file before submitting
 
 ### Phase 4: Smoke test coverage for logo upload/remove + isolation
 
