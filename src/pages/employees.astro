@@ -1,0 +1,66 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import AddEmployeeForm from "@/components/employees/AddEmployeeForm";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { createClient } from "@/lib/supabase";
+import { listEmployees } from "@/lib/services/employees";
+import type { EmployeeDTO } from "@/types";
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+
+let employees: EmployeeDTO[] = [];
+let loadError: string | null = null;
+
+if (supabase) {
+  try {
+    employees = await listEmployees(supabase);
+  } catch (error) {
+    loadError = error instanceof Error ? error.message : "Failed to load employees";
+  }
+}
+---
+
+<Layout title="Employees">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto max-w-3xl">
+      <Topbar />
+      <div class="rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
+        <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Employees
+        </h1>
+
+        <AddEmployeeForm client:load />
+
+        <div class="mt-8">
+          {loadError ? (
+            <p class="rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">{loadError}</p>
+          ) : employees.length === 0 ? (
+            <p class="text-sm text-blue-100/60">No employees yet. Add your first employee above.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="text-blue-100/70">First name</TableHead>
+                  <TableHead className="text-blue-100/70">Last name</TableHead>
+                  <TableHead className="text-blue-100/70">Position</TableHead>
+                  <TableHead className="text-blue-100/70">Phone</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((employee) => (
+                  <TableRow className="border-white/10 hover:bg-white/5">
+                    <TableCell className="text-white">{employee.firstName}</TableCell>
+                    <TableCell className="text-white">{employee.lastName}</TableCell>
+                    <TableCell className="text-white">{employee.position}</TableCell>
+                    <TableCell className="text-white">{employee.phone}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
