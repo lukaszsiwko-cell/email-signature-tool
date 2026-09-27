@@ -9,8 +9,9 @@ const createEmployeeSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
   position: z.string().trim().min(1, "Position is required"),
-  // Permissive per the PRD's warn-don't-block rule — validated for shape on the client only.
-  phone: z.string().trim().min(1, "Phone is required"),
+  // Optional and permissive per the PRD's warn-don't-block rule — shape is
+  // only validated on the client (as a non-blocking hint), never enforced here.
+  phone: z.string().trim().optional().default(""),
 });
 
 async function parseBody(request: Request): Promise<Record<string, unknown>> {

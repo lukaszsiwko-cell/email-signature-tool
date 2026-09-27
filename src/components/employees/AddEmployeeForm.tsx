@@ -6,9 +6,17 @@ import { ServerError } from "@/components/auth/ServerError";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Loose "does this look like a phone number" check — per the PRD's warn, never
-// block rule, a non-match only shows a hint and never prevents submission.
-const PHONE_LOOKS_VALID = /^[+\d][\d\s()-]{5,}$/;
+// Optional field — per the PRD's warn, never block rule, an invalid shape
+// only shows a hint and never prevents submission. "Valid" means 9 digits
+// once separators/parens/+ are stripped, with an optional leading Polish
+// country code (48) tolerated and discarded before counting.
+function phoneLooksValid(value: string): boolean {
+  let digits = value.replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("48")) {
+    digits = digits.slice(2);
+  }
+  return digits.length === 9;
+}
 
 interface FormErrors {
   firstName?: string;
@@ -74,10 +82,10 @@ export default function AddEmployeeForm() {
   }
 
   const phoneHint =
-    phone.trim().length > 0 && !PHONE_LOOKS_VALID.test(phone) ? (
+    phone.trim().length > 0 && !phoneLooksValid(phone) ? (
       <p className="mt-1 flex items-center gap-1 text-xs text-yellow-300">
         <AlertTriangle className="size-3" />
-        This doesn&apos;t look like a valid phone number, but you can still submit.
+        This doesn&apos;t look like a valid phone number (9 digits), but you can still submit.
       </p>
     ) : undefined;
 
