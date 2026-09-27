@@ -1,7 +1,7 @@
 ---
 change_id: edit-and-delete-employee
 title: Edit and delete employee records in own department
-status: planning
+status: done
 created: 2026-09-27
 updated: 2026-09-28
 archived_at: null

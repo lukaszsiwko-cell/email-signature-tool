@@ -81,6 +81,11 @@ const [deptA, deptB] = departments;
 const emailA = `smoke-a-${runId}@example.com`;
 const emailB = `smoke-b-${runId}@example.com`;
 const employeeLastName = `Smoketest-${runId}`;
+const editedFirstName = `SmokeEdited-${runId}`;
+
+// Populated once the employee is created via the API, so later edit/delete
+// steps can target the real id without hardcoding it.
+const state = { employeeId: null };
 
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
@@ -110,11 +115,20 @@ const steps = [
   ],
   [
     "add employee via API",
-    () =>
-      request("/api/employees", {
+    async () => {
+      const res = await request("/api/employees", {
         method: "POST",
         json: { firstName: "Smoke", lastName: employeeLastName, position: "Tester", phone: "+48 600 000 000" },
-      }),
+      });
+      if (res.status === 201) {
+        try {
+          state.employeeId = JSON.parse(res.body).id;
+        } catch {
+          // leave state.employeeId null — the later edit/delete steps will fail loudly instead
+        }
+      }
+      return res;
+    },
     { status: 201, bodyIncludes: employeeLastName },
   ],
   [
@@ -127,8 +141,34 @@ const steps = [
     () => request("/employees"),
     { status: 200, bodyIncludes: employeeLastName },
   ],
-  ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
-  ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  [
+    "edit employee via API (PUT)",
+    () =>
+      request(`/api/employees/${state.employeeId}`, {
+        method: "PUT",
+        json: {
+          firstName: editedFirstName,
+          lastName: employeeLastName,
+          position: "Senior Tester",
+          phone: "+48 600 000 001",
+        },
+      }),
+    { status: 200, bodyIncludes: editedFirstName },
+  ],
+  [
+    "edit employee rejects missing field",
+    () =>
+      request(`/api/employees/${state.employeeId}`, {
+        method: "PUT",
+        json: { firstName: "", lastName: employeeLastName, position: "Senior Tester", phone: "+48 600 000 001" },
+      }),
+    { status: 400, bodyIncludes: "Validation failed" },
+  ],
+  [
+    "employees page reflects the edited employee",
+    () => request("/employees"),
+    { status: 200, bodyIncludes: editedFirstName },
+  ],
   [
     "signup creates second account (department B)",
     () =>
@@ -149,6 +189,33 @@ const steps = [
     () => request("/api/employees", { jar: "userB" }),
     { status: 200, bodyExcludes: employeeLastName },
   ],
+  [
+    "second user cannot edit first user's employee",
+    () =>
+      request(`/api/employees/${state.employeeId}`, {
+        method: "PUT",
+        json: { firstName: "Hijacked", lastName: employeeLastName, position: "Tester", phone: "1" },
+        jar: "userB",
+      }),
+    { status: 404 },
+  ],
+  [
+    "second user cannot delete first user's employee",
+    () => request(`/api/employees/${state.employeeId}`, { method: "DELETE", jar: "userB" }),
+    { status: 404 },
+  ],
+  [
+    "first user deletes their own employee",
+    () => request(`/api/employees/${state.employeeId}`, { method: "DELETE" }),
+    { status: 204 },
+  ],
+  [
+    "employees page no longer lists the deleted employee",
+    () => request("/employees"),
+    { status: 200, bodyExcludes: employeeLastName },
+  ],
+  ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
+  ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
 ];
 
 for (const [name, run, expected] of steps) {
