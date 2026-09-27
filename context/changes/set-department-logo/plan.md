@@ -326,16 +326,16 @@ No data migration needed for existing rows — `departments.logo_url` is current
 ### Phase 3: UI — logo section on the employees page
 
 #### Automated
-- [x] 3.1 `npx astro check` and `npm run lint` pass
-- [x] 3.2 `npm run build` succeeds
+- [x] 3.1 `npx astro check` and `npm run lint` pass — 4ca8f99
+- [x] 3.2 `npm run build` succeeds — 4ca8f99
 
 #### Manual
-- [x] 3.3 No-logo placeholder renders; valid upload shows thumbnail after reload
-- [x] 3.4 Replacing an existing logo shows the new thumbnail after reload
-- [x] 3.5 Remove-logo inline confirm clears back to placeholder after reload
-- [x] 3.6 Client-side rejects oversized/wrong-type file before submitting
+- [x] 3.3 No-logo placeholder renders; valid upload shows thumbnail after reload — 4ca8f99
+- [x] 3.4 Replacing an existing logo shows the new thumbnail after reload — 4ca8f99
+- [x] 3.5 Remove-logo inline confirm clears back to placeholder after reload — 4ca8f99
+- [x] 3.6 Client-side rejects oversized/wrong-type file before submitting — 4ca8f99
 
 ### Phase 4: Smoke test coverage for logo upload/remove + isolation
 
 #### Automated
-- [ ] 4.1 `npm run smoke` passes, including new logo upload/replace/remove/isolation checks
+- [x] 4.1 `npm run smoke` passes, including new logo upload/replace/remove/isolation checks

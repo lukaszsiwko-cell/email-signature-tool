@@ -4,6 +4,13 @@
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const password = "Smoke-Test-Passw0rd!";
 const runId = Date.now();
+const initialLogoPng = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+s9lsAAAAASUVORK5CYII=",
+  "base64",
+);
+const replacementLogoSvg = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="#2563eb" /></svg>',
+);
 
 function makeJar() {
   const jar = new Map();
@@ -26,7 +33,7 @@ function makeJar() {
 // Each "user" gets its own cookie jar so the two smoke accounts never share a session.
 const jars = { default: makeJar() };
 
-async function request(path, { method = "GET", form, json, jar = "default" } = {}) {
+async function request(path, { method = "GET", form, json, multipart, jar = "default" } = {}) {
   const cookieJar = jars[jar] ?? (jars[jar] = makeJar());
   const response = await fetch(BASE_URL + path, {
     method,
@@ -37,7 +44,7 @@ async function request(path, { method = "GET", form, json, jar = "default" } = {
       ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
       ...(json ? { "Content-Type": "application/json" } : {}),
     },
-    body: form ? new URLSearchParams(form).toString() : json ? JSON.stringify(json) : undefined,
+    body: multipart ? multipart : form ? new URLSearchParams(form).toString() : json ? JSON.stringify(json) : undefined,
   });
   cookieJar.store(response);
   const body = await response.text();
@@ -70,6 +77,33 @@ function check(name, actual, expected) {
 
 let failed = 0;
 
+function parseJson(body) {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return null;
+  }
+}
+
+function objectPathFromSignedUrl(url) {
+  return typeof url === "string" ? url.split("?")[0] : "";
+}
+
+async function fetchBinary(url) {
+  if (typeof url !== "string" || !url) {
+    return { status: 500, location: "", body: "missing signed URL" };
+  }
+  const response = await fetch(url);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  return { status: response.status, location: "", body: bytes.toString("base64") };
+}
+
+async function uploadLogo(file, jar = "default") {
+  const formData = new FormData();
+  formData.set("file", new File([file.data], file.name, { type: file.type }));
+  return request("/api/departments/logo", { method: "PUT", multipart: formData, jar });
+}
+
 const departments = await fetchDepartments();
 if (departments.length < 2) {
   console.log(`FAIL  fetch seeded departments  -> found ${departments.length}, need at least 2`);
@@ -85,7 +119,21 @@ const editedFirstName = `SmokeEdited-${runId}`;
 
 // Populated once the employee is created via the API, so later edit/delete
 // steps can target the real id without hardcoding it.
-const state = { employeeId: null };
+const state = {
+  employeeId: null,
+  firstLogoUrl: null,
+  firstLogoPath: "",
+  replacementLogoUrl: null,
+  replacementLogoPath: "",
+  replacementLogoBytes: "",
+  secondLogoUrl: null,
+  secondLogoPath: "",
+};
+
+const initialLogoFile = { name: `smoke-logo-${runId}.png`, type: "image/png", data: initialLogoPng };
+const replacementLogoFile = { name: `smoke-logo-${runId}.svg`, type: "image/svg+xml", data: replacementLogoSvg };
+const expectedInitialLogoBody = initialLogoPng.toString("base64");
+const expectedReplacementLogoBody = replacementLogoSvg.toString("base64");
 
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
@@ -213,6 +261,114 @@ const steps = [
     "employees page no longer lists the deleted employee",
     () => request("/employees"),
     { status: 200, bodyExcludes: employeeLastName },
+  ],
+  [
+    "first user uploads a department logo",
+    async () => {
+      const res = await uploadLogo(initialLogoFile);
+      const payload = parseJson(res.body);
+      if (res.status === 200 && payload?.logoUrl) {
+        state.firstLogoUrl = payload.logoUrl;
+        state.firstLogoPath = objectPathFromSignedUrl(payload.logoUrl);
+      }
+      return {
+        ...res,
+        status: res.status === 200 && !!state.firstLogoUrl ? 200 : res.status === 200 ? 500 : res.status,
+        body: res.status === 200 && !!state.firstLogoUrl ? "logoUrl returned" : res.body,
+      };
+    },
+    { status: 200, bodyIncludes: "logoUrl returned" },
+  ],
+  [
+    "first user's signed logo URL returns the uploaded bytes",
+    async () => {
+      const res = await fetchBinary(state.firstLogoUrl);
+      return {
+        ...res,
+        status:
+          res.status === 200 && res.body === expectedInitialLogoBody ? 200 : res.status === 200 ? 500 : res.status,
+        body: res.status === 200 && res.body === expectedInitialLogoBody ? "bytes match" : "bytes mismatch",
+      };
+    },
+    { status: 200, bodyIncludes: "bytes match" },
+  ],
+  [
+    "first user replaces their department logo in place",
+    async () => {
+      const res = await uploadLogo(replacementLogoFile);
+      const payload = parseJson(res.body);
+      if (res.status === 200 && payload?.logoUrl) {
+        state.replacementLogoUrl = payload.logoUrl;
+        state.replacementLogoPath = objectPathFromSignedUrl(payload.logoUrl);
+      }
+      const replacedInPlace = !!state.replacementLogoPath && state.replacementLogoPath === state.firstLogoPath;
+      return {
+        ...res,
+        status: res.status === 200 && replacedInPlace ? 200 : res.status === 200 ? 500 : res.status,
+        body: res.status === 200 && replacedInPlace ? "same storage key" : "replacement key mismatch",
+      };
+    },
+    { status: 200, bodyIncludes: "same storage key" },
+  ],
+  [
+    "replacement logo signed URL returns the new bytes",
+    async () => {
+      const res = await fetchBinary(state.replacementLogoUrl);
+      const replaced = res.body === expectedReplacementLogoBody;
+      const changed = res.body !== expectedInitialLogoBody;
+      if (res.status === 200 && replaced) {
+        state.replacementLogoBytes = res.body;
+      }
+      return {
+        ...res,
+        status: res.status === 200 && replaced && changed ? 200 : res.status === 200 ? 500 : res.status,
+        body: res.status === 200 && replaced && changed ? "replacement bytes match" : "replacement bytes mismatch",
+      };
+    },
+    { status: 200, bodyIncludes: "replacement bytes match" },
+  ],
+  [
+    "second user uploads a separate department logo",
+    async () => {
+      const res = await uploadLogo(initialLogoFile, "userB");
+      const payload = parseJson(res.body);
+      if (res.status === 200 && payload?.logoUrl) {
+        state.secondLogoUrl = payload.logoUrl;
+        state.secondLogoPath = objectPathFromSignedUrl(payload.logoUrl);
+      }
+      const isolatedStorageKeys =
+        !!state.secondLogoPath && !!state.replacementLogoPath && state.secondLogoPath !== state.replacementLogoPath;
+      return {
+        ...res,
+        status: res.status === 200 && isolatedStorageKeys ? 200 : res.status === 200 ? 500 : res.status,
+        body: res.status === 200 && isolatedStorageKeys ? "different storage key" : "storage key mismatch",
+      };
+    },
+    { status: 200, bodyIncludes: "different storage key" },
+  ],
+  [
+    "second user's logo does not affect the first user's logo",
+    async () => {
+      const res = await fetchBinary(state.replacementLogoUrl);
+      const unchanged =
+        res.status === 200 && res.body === state.replacementLogoBytes && res.body === expectedReplacementLogoBody;
+      return {
+        ...res,
+        status: unchanged ? 200 : res.status === 200 ? 500 : res.status,
+        body: unchanged ? "first logo unchanged" : "first logo changed",
+      };
+    },
+    { status: 200, bodyIncludes: "first logo unchanged" },
+  ],
+  [
+    "first user removes their department logo",
+    () => request("/api/departments/logo", { method: "DELETE" }),
+    { status: 204 },
+  ],
+  [
+    "employees page shows the no-logo placeholder after removal",
+    () => request("/employees"),
+    { status: 200, bodyIncludes: "No logo set" },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
