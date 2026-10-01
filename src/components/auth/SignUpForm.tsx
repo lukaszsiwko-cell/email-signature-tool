@@ -7,7 +7,8 @@ import { ServerError } from "@/components/auth/ServerError";
 import { cn } from "@/lib/utils";
 
 const MIN_PASSWORD_LENGTH = 6;
-const selectBase = "w-full rounded-lg border bg-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 transition-colors";
+const selectBase =
+  "w-full rounded-lg border bg-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 transition-colors";
 
 interface DepartmentOption {
   id: string;

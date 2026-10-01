@@ -94,18 +94,12 @@ function inspect(folder, roadmap) {
   const absolute = resolve(folder);
   requireChangeFile(absolute);
   const probes = new Map(
-    ["change.md", "research.md", "plan.md", "plan-brief.md"].map((name) => [
-      name,
-      join(absolute, name),
-    ]),
+    ["change.md", "research.md", "plan.md", "plan-brief.md"].map((name) => [name, join(absolute, name)]),
   );
   if (roadmap !== undefined) probes.set("roadmap", resolve(roadmap));
   // Each probe is independent: a missing plan cannot hide an existing roadmap.
   return Object.fromEntries(
-    [...probes].map(([name, path]) => [
-      name,
-      { path, exists: existsSync(path), sha256: fingerprint(path) },
-    ]),
+    [...probes].map(([name, path]) => [name, { path, exists: existsSync(path), sha256: fingerprint(path) }]),
   );
 }
 
@@ -124,9 +118,7 @@ function scalar(line, key) {
   );
   const match = pattern.exec(line);
   if (!match || match[0] !== line)
-    throw new GuardError(
-      `Unsupported scalar syntax for ${key}; preserve the file and inspect it directly`,
-    );
+    throw new GuardError(`Unsupported scalar syntax for ${key}; preserve the file and inspect it directly`);
   return { match, value: match[2].replace(/^["']|["']$/g, "") };
 }
 
@@ -140,11 +132,7 @@ function requireIsoDate(value) {
   if (!match) throw new GuardError(`Unsupported date: ${value}; use YYYY-MM-DD`);
   const [year, month, day] = match.slice(1).map(Number);
   const probe = new Date(Date.UTC(year, month - 1, day));
-  if (
-    probe.getUTCFullYear() !== year ||
-    probe.getUTCMonth() !== month - 1 ||
-    probe.getUTCDate() !== day
-  )
+  if (probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day)
     throw new GuardError(`Unsupported date: ${value}; use a real calendar day`);
   return value;
 }
@@ -174,14 +162,10 @@ function metadataBytes(raw, changeId, today, command) {
   const positions = new Map();
   for (let i = 1; i < end; i += 1) {
     if (/^['"?%]|^<<:/.test(lines[i]))
-      throw new GuardError(
-        "Unsupported top-level YAML key syntax; preserve metadata and inspect directly",
-      );
+      throw new GuardError("Unsupported top-level YAML key syntax; preserve metadata and inspect directly");
     const match = /^([A-Za-z_][\p{L}\p{N}_-]*):/u.exec(lines[i]);
     if (!match && lines[i].trim() && !/^[ \t#]/.test(lines[i]))
-      throw new GuardError(
-        "Unsupported top-level YAML syntax; preserve metadata and inspect directly",
-      );
+      throw new GuardError("Unsupported top-level YAML syntax; preserve metadata and inspect directly");
     if (match) {
       if (positions.has(match[1])) throw new GuardError(`Duplicate frontmatter key: ${match[1]}`);
       positions.set(match[1], i);
@@ -198,10 +182,7 @@ function metadataBytes(raw, changeId, today, command) {
   if (!command.from.has(status.value)) return raw;
   lines[positions.get("status")] = rewrite(status.match, command.status);
   if (positions.has("updated")) {
-    lines[positions.get("updated")] = rewrite(
-      scalar(lines[positions.get("updated")], "updated").match,
-      today,
-    );
+    lines[positions.get("updated")] = rewrite(scalar(lines[positions.get("updated")], "updated").match, today);
   } else {
     lines.splice(end, 0, `updated: ${today}${lines[0].endsWith("\r\n") ? "\r\n" : "\n"}`);
   }
@@ -213,7 +194,7 @@ function replaceAtomically(folder, target, raw, updated) {
   try {
     const handle = openSync(temporary, "wx", 0o600);
     try {
-      for (let written = 0; written < updated.length; ) {
+      for (let written = 0; written < updated.length;) {
         written += writeSync(handle, updated, written, updated.length - written);
       }
       fsyncSync(handle);
@@ -229,18 +210,13 @@ function replaceAtomically(folder, target, raw, updated) {
   } finally {
     if (temporary !== null) rmSync(temporary, { force: true });
   }
-  if (!readFileSync(target).equals(updated))
-    throw new GuardError("Persisted metadata differs from intended bytes");
+  if (!readFileSync(target).equals(updated)) throw new GuardError("Persisted metadata differs from intended bytes");
 }
 
 function mark(folder, expected, today, name) {
   const command = COMMANDS[name];
   const absolute = resolve(folder);
-  if (
-    hasArchiveSegment(absolute) ||
-    hasArchiveSegment(realPath(absolute)) ||
-    lstatOrNull(absolute)?.isSymbolicLink()
-  )
+  if (hasArchiveSegment(absolute) || hasArchiveSegment(realPath(absolute)) || lstatOrNull(absolute)?.isSymbolicLink())
     throw new GuardError("Archived or symlink target");
   const target = join(absolute, "change.md");
   const metadata = lstatOrNull(target);
@@ -249,9 +225,7 @@ function mark(folder, expected, today, name) {
   for (const required of command.required) {
     const document = statOrNull(join(absolute, required));
     if (!document?.isFile() || !document.size)
-      throw new GuardError(
-        `Save and verify required documents before advancing metadata: ${required}`,
-      );
+      throw new GuardError(`Save and verify required documents before advancing metadata: ${required}`);
   }
   const raw = readFileSync(target);
   if (sha256(raw) !== expected)
@@ -265,9 +239,7 @@ function mark(folder, expected, today, name) {
 function parseArguments(argv) {
   const [name, ...rest] = argv;
   if (name !== "inspect" && !(name in COMMANDS))
-    throw new GuardError(
-      `Unknown command: ${name ?? "(none)"}; expected inspect, mark-planned or mark-researched`,
-    );
+    throw new GuardError(`Unknown command: ${name ?? "(none)"}; expected inspect, mark-planned or mark-researched`);
   const allowed = name === "inspect" ? ["roadmap"] : ["expected-sha256", "date"];
   const positional = [];
   const options = {};
@@ -287,8 +259,7 @@ function parseArguments(argv) {
     options[key] = rest[i + 1];
     i += 1;
   }
-  if (positional.length !== 1)
-    throw new GuardError(`${name} takes exactly one change directory argument`);
+  if (positional.length !== 1) throw new GuardError(`${name} takes exactly one change directory argument`);
   if (name !== "inspect") {
     for (const key of allowed) {
       if (options[key] === undefined) throw new GuardError(`Option --${key} is required`);

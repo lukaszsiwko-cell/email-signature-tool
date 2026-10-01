@@ -172,7 +172,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                       aria-invalid={Boolean(draftErrors.firstName)}
                     />
                     {draftErrors.firstName ? (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+                      <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
                         <CircleAlert className="size-3" />
                         {draftErrors.firstName}
                       </p>
@@ -189,7 +189,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                       aria-invalid={Boolean(draftErrors.lastName)}
                     />
                     {draftErrors.lastName ? (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+                      <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
                         <CircleAlert className="size-3" />
                         {draftErrors.lastName}
                       </p>
@@ -206,7 +206,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                       aria-invalid={Boolean(draftErrors.position)}
                     />
                     {draftErrors.position ? (
-                      <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+                      <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
                         <CircleAlert className="size-3" />
                         {draftErrors.position}
                       </p>
@@ -239,7 +239,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                           Cancel
                         </Button>
                       </div>
-                      {rowError ? <p className="text-xs text-destructive">{rowError}</p> : null}
+                      {rowError ? <p className="text-destructive text-xs">{rowError}</p> : null}
                     </div>
                   </TableCell>
                 </>
@@ -253,7 +253,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                     {isConfirmingDelete ? (
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Are you sure?</span>
+                          <span className="text-muted-foreground text-xs">Are you sure?</span>
                           <Button
                             type="button"
                             size="sm"
@@ -275,7 +275,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                             No
                           </Button>
                         </div>
-                        {rowError ? <p className="text-xs text-destructive">{rowError}</p> : null}
+                        {rowError ? <p className="text-destructive text-xs">{rowError}</p> : null}
                       </div>
                     ) : (
                       <div className="flex gap-2">

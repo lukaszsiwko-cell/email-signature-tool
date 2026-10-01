@@ -194,8 +194,8 @@
           "references/progress-format.md": "01259753af620e2bfcaa04fb34d732d2efcb6fc172f8cf062f24870fe2248642",
           "references/question-examples.md": "d8384e1c3e11c6a1f3fc9cbc97f5b3b9ba33bc35288af65c058b55dbc7bac8c5",
           "references/task-orchestration.md": "9279b3d73779c763ca740b09a521155a71369ed4787ca2c85b13be175d5c3dc6",
-          "scripts/metadata-guard.mjs": "a6c567ca15c93fe614d6a484602bb318272da3b38f1098b755335ee4da7fab68",
-          "scripts/metadata-guard.test.mjs": "b953ce38e1c456756e296f9b9781f6ce8580ddf05c6d823d852aa51c4d1d3976"
+          "scripts/metadata-guard.mjs": "a7bc618844506e789bbc78ce45286adb643082bb512c3c194ffb29bd839032d0",
+          "scripts/metadata-guard.test.mjs": "e9c957519659746651b5057be7c23e5cce49ae46dd1318062b21a8e5eb076bf8"
         }
       },
       "10x-plan-review": {
@@ -271,9 +271,9 @@
           "SKILL.md": "946245bde1b1d20e693356e7b81036d0377c29c9f5031614c30990613fbaf096",
           "references/research-document.md": "5603e342c74a3af421ab800a9ff134c4a60b6697a2e39a49384a2781059b9c91",
           "references/task-orchestration.md": "9279b3d73779c763ca740b09a521155a71369ed4787ca2c85b13be175d5c3dc6",
-          "scripts/metadata-guard.mjs": "a6c567ca15c93fe614d6a484602bb318272da3b38f1098b755335ee4da7fab68",
+          "scripts/metadata-guard.mjs": "a7bc618844506e789bbc78ce45286adb643082bb512c3c194ffb29bd839032d0",
           "scripts/prose-json-check.mjs": "44696db6a11664a0369f723dd6c3b379f36dc9774385bddedbb178420aea95cf",
-          "scripts/prose-json-check.test.mjs": "873ce640fd679720da65ee145dde13cf354ed664fcfff25a3f11bc5cc6324d51"
+          "scripts/prose-json-check.test.mjs": "ba6b578133df65f144aa203dffd9cc42c4d2810567baa69c54ee6cb7ffdd78b3"
         }
       },
       "10x-ui": {

@@ -65,11 +65,9 @@ test("an integral float is sought as a bare integer and strings carry no token",
 
 test("an unreadable facts file is refused instead of counted as clean", () => {
   writeFileSync(join(root, "research.md"), "# Research\n");
-  const result = spawnSync(
-    process.execPath,
-    [checker, join(root, "research.md"), join(root, "absent.json")],
-    { encoding: "utf8" },
-  );
+  const result = spawnSync(process.execPath, [checker, join(root, "research.md"), join(root, "absent.json")], {
+    encoding: "utf8",
+  });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Cannot read facts file/);
   assert.equal(result.stdout, "");

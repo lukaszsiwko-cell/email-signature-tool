@@ -3,15 +3,7 @@ import { afterEach, beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -116,15 +108,9 @@ test("missing owned fields are appended without dropping identity", () => {
 });
 
 test("mark-planned advances a researched change and refreshes the date", () => {
-  write(
-    "change.md",
-    "---\nchange_id: delivery-retries\nstatus: preparing\nupdated: 2026-09-09\n---\n",
-  );
+  write("change.md", "---\nchange_id: delivery-retries\nstatus: preparing\nupdated: 2026-09-09\n---\n");
   assert.equal(markPlanned().status, 0);
-  assert.equal(
-    read(),
-    "---\nchange_id: delivery-retries\nstatus: planned\nupdated: 2026-09-19\n---\n",
-  );
+  assert.equal(read(), "---\nchange_id: delivery-retries\nstatus: planned\nupdated: 2026-09-19\n---\n");
 });
 
 test("mark-planned refuses while a required document is missing or empty", () => {
@@ -138,8 +124,7 @@ test("mark-planned refuses while a required document is missing or empty", () =>
 });
 
 test("a stale fingerprint is refused and the file is left untouched", () => {
-  const raw =
-    "---\nchange_id: delivery-retries\nstatus: preparing\ncreated: 2026-09-09\nupdated: 2026-09-09\n---\n";
+  const raw = "---\nchange_id: delivery-retries\nstatus: preparing\ncreated: 2026-09-09\nupdated: 2026-09-09\n---\n";
   write("change.md", raw);
   const result = markResearched(folder, "0".repeat(64));
   assert.equal(result.status, 1);
@@ -183,8 +168,7 @@ test("identity fields missing from existing frontmatter are refused", () => {
 });
 
 test("a later status is never downgraded by either command", () => {
-  const raw =
-    "---\nchange_id: delivery-retries\nstatus: implementing\ncreated: 2026-09-09\nupdated: 2026-09-09\n---\n";
+  const raw = "---\nchange_id: delivery-retries\nstatus: implementing\ncreated: 2026-09-09\nupdated: 2026-09-09\n---\n";
   write("change.md", raw);
   for (const result of [markResearched(), markPlanned()]) {
     assert.equal(result.status, 0, result.stderr);
@@ -206,10 +190,7 @@ test("CRLF metadata keeps its line endings", () => {
   write("change.md", "---\r\nchange_id: delivery-retries\r\nstatus: new\r\n---\r\n");
   assert.equal(markPlanned().status, 0);
   const text = read();
-  assert.equal(
-    text,
-    "---\r\nchange_id: delivery-retries\r\nstatus: planned\r\nupdated: 2026-09-19\r\n---\r\n",
-  );
+  assert.equal(text, "---\r\nchange_id: delivery-retries\r\nstatus: planned\r\nupdated: 2026-09-19\r\n---\r\n");
   assert.ok(!/(^|[^\r])\n/.test(text));
 });
 
@@ -221,13 +202,7 @@ test("inspect probes every target independently", () => {
   const result = run("inspect", folder, "--roadmap", roadmap);
   assert.equal(result.status, 0, result.stderr);
   const snapshot = JSON.parse(result.stdout);
-  assert.deepEqual(Object.keys(snapshot), [
-    "change.md",
-    "research.md",
-    "plan.md",
-    "plan-brief.md",
-    "roadmap",
-  ]);
+  assert.deepEqual(Object.keys(snapshot), ["change.md", "research.md", "plan.md", "plan-brief.md", "roadmap"]);
   assert.equal(snapshot["research.md"].exists, true);
   assert.equal(snapshot["plan.md"].exists, false);
   assert.equal(snapshot["plan.md"].sha256, null);
@@ -245,14 +220,7 @@ test("inspect without a roadmap reports exactly the four change documents", () =
 test("an impossible calendar date is refused before anything is read", () => {
   write("change.md", "---\nchange_id: delivery-retries\nstatus: new\n---\n");
   const raw = read();
-  const result = run(
-    "mark-planned",
-    folder,
-    "--expected-sha256",
-    sha(Buffer.from(raw)),
-    "--date",
-    "2026-02-30",
-  );
+  const result = run("mark-planned", folder, "--expected-sha256", sha(Buffer.from(raw)), "--date", "2026-02-30");
   assert.equal(result.status, 1);
   assert.match(result.stderr, /2026-02-30/);
   assert.equal(read(), raw);

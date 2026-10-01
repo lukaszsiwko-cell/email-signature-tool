@@ -136,24 +136,24 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
   }
 
   return (
-    <section className="mb-8 rounded-2xl border border-border bg-card p-6 backdrop-blur-sm">
+    <section className="border-border bg-card mb-8 rounded-2xl border p-6 backdrop-blur-sm">
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-foreground">Department logo</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h2 className="text-foreground text-lg font-semibold">Department logo</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
           Upload the image used across signatures for everyone in your department.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-        <div className="overflow-hidden rounded-xl border border-border bg-muted">
+        <div className="border-border bg-muted overflow-hidden rounded-xl border">
           {initialLogoUrl ? (
             <img
               src={initialLogoUrl}
               alt="Current department logo"
-              className="h-40 w-full bg-muted object-contain p-4"
+              className="bg-muted h-40 w-full object-contain p-4"
             />
           ) : (
-            <div className="flex h-40 items-center justify-center px-4 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex h-40 items-center justify-center px-4 text-center text-sm">
               No logo set
             </div>
           )}
@@ -161,7 +161,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
 
         <form onSubmit={handleUpload} className="space-y-4" noValidate>
           <div>
-            <Label htmlFor="department-logo" className="mb-1 block text-sm text-muted-foreground">
+            <Label htmlFor="department-logo" className="text-muted-foreground mb-1 block text-sm">
               Logo file
             </Label>
             <Input
@@ -179,7 +179,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
           </div>
 
           {errorMessage ? (
-            <p className="flex items-center gap-2 text-sm text-destructive">
+            <p className="text-destructive flex items-center gap-2 text-sm">
               <CircleAlert className="size-4 shrink-0" />
               {errorMessage}
             </p>
@@ -200,7 +200,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
             {initialLogoUrl ? (
               isConfirmingRemove ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Are you sure?</span>
+                  <span className="text-muted-foreground text-xs">Are you sure?</span>
                   <Button
                     type="button"
                     size="sm"

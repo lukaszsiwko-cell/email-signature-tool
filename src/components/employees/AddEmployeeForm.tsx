@@ -86,7 +86,7 @@ export default function AddEmployeeForm() {
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="firstName" className="mb-1 block text-sm text-muted-foreground">
+          <Label htmlFor="firstName" className="text-muted-foreground mb-1 block text-sm">
             First name
           </Label>
           <Input
@@ -99,7 +99,7 @@ export default function AddEmployeeForm() {
             aria-invalid={Boolean(errors.firstName)}
           />
           {errors.firstName ? (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+            <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
               <CircleAlert className="size-3" />
               {errors.firstName}
             </p>
@@ -107,7 +107,7 @@ export default function AddEmployeeForm() {
         </div>
 
         <div>
-          <Label htmlFor="lastName" className="mb-1 block text-sm text-muted-foreground">
+          <Label htmlFor="lastName" className="text-muted-foreground mb-1 block text-sm">
             Last name
           </Label>
           <Input
@@ -120,7 +120,7 @@ export default function AddEmployeeForm() {
             aria-invalid={Boolean(errors.lastName)}
           />
           {errors.lastName ? (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+            <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
               <CircleAlert className="size-3" />
               {errors.lastName}
             </p>
@@ -129,7 +129,7 @@ export default function AddEmployeeForm() {
       </div>
 
       <div>
-        <Label htmlFor="position" className="mb-1 block text-sm text-muted-foreground">
+        <Label htmlFor="position" className="text-muted-foreground mb-1 block text-sm">
           Position
         </Label>
         <Input
@@ -142,7 +142,7 @@ export default function AddEmployeeForm() {
           aria-invalid={Boolean(errors.position)}
         />
         {errors.position ? (
-          <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
+          <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
             <CircleAlert className="size-3" />
             {errors.position}
           </p>
@@ -150,7 +150,7 @@ export default function AddEmployeeForm() {
       </div>
 
       <div>
-        <Label htmlFor="phone" className="mb-1 block text-sm text-muted-foreground">
+        <Label htmlFor="phone" className="text-muted-foreground mb-1 block text-sm">
           Phone
         </Label>
         <Input
@@ -168,7 +168,7 @@ export default function AddEmployeeForm() {
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? (
           <span className="flex items-center gap-2">
-            <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+            <span className="border-primary-foreground/30 border-t-primary-foreground size-4 animate-spin rounded-full border-2" />
             Adding...
           </span>
         ) : (

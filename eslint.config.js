@@ -71,13 +71,15 @@ const astroConfig = defineConfig({
 });
 
 const scriptsConfig = defineConfig({
-  files: ["scripts/**/*.mjs"],
+  files: ["scripts/**/*.mjs", ".github/skills/**/scripts/**/*.mjs"],
   extends: [tseslint.configs.disableTypeChecked],
   languageOptions: {
     globals: {
       console: true,
       process: true,
       fetch: true,
+      URL: true,
+      TextDecoder: true,
       URLSearchParams: true,
       Buffer: true,
       FormData: true,
