@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { AlertTriangle, CircleAlert, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, CircleAlert, Download, LoaderCircle, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { EmployeeDTO } from "@/types";
+import type { EmployeeDTO, SignatureArtifactsDTO } from "@/types";
 
 // Optional field — per the PRD's warn, never block rule, an invalid shape
 // only shows a hint and never prevents saving. "Valid" means 9 digits once
@@ -15,6 +15,28 @@ function phoneLooksValid(value: string): boolean {
     digits = digits.slice(2);
   }
   return digits.length === 9;
+}
+
+function sanitizeFilename(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[. -]+|[. -]+$/g, "")
+    .slice(0, 80);
+}
+
+function downloadArtifact(contents: string, contentType: string, filename: string) {
+  const objectUrl = URL.createObjectURL(new Blob([contents], { type: contentType }));
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }
 
 interface Draft {
@@ -42,6 +64,8 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
   const [rowError, setRowError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [generatingEmployeeId, setGeneratingEmployeeId] = useState<string | null>(null);
+  const [signatureErrors, setSignatureErrors] = useState<Record<string, string>>({});
 
   function startEdit(employee: EmployeeDTO) {
     setEditingId(employee.id);
@@ -130,6 +154,50 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
     } catch {
       setRowError("Failed to delete employee");
       setIsDeleting(false);
+    }
+  }
+
+  async function generateSignatures(employee: EmployeeDTO) {
+    if (generatingEmployeeId !== null) return;
+
+    setGeneratingEmployeeId(employee.id);
+    setSignatureErrors((current) => {
+      const next = { ...current };
+      delete next[employee.id];
+      return next;
+    });
+
+    try {
+      const response = await fetch(`/api/employees/${employee.id}/signatures`, { method: "POST" });
+      const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+
+      if (!response.ok) {
+        setSignatureErrors((current) => ({
+          ...current,
+          [employee.id]: typeof body?.error === "string" ? body.error : "Failed to generate signatures",
+        }));
+        return;
+      }
+
+      if (typeof body?.outlookHtml !== "string" || typeof body.thunderbirdInstaller !== "string") {
+        setSignatureErrors((current) => ({ ...current, [employee.id]: "Invalid signature response" }));
+        return;
+      }
+
+      const artifacts = body as unknown as SignatureArtifactsDTO;
+      const filenameBase =
+        sanitizeFilename(`${employee.firstName}-${employee.lastName}`) || `employee-${employee.id.slice(0, 8)}`;
+
+      downloadArtifact(artifacts.outlookHtml, "text/html;charset=utf-8", `${filenameBase}-new-outlook.html`);
+      downloadArtifact(
+        artifacts.thunderbirdInstaller,
+        "text/plain;charset=utf-8",
+        `${filenameBase}-thunderbird-installer.ps1`,
+      );
+    } catch {
+      setSignatureErrors((current) => ({ ...current, [employee.id]: "Failed to generate signatures" }));
+    } finally {
+      setGeneratingEmployeeId(null);
     }
   }
 
@@ -278,29 +346,55 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                         {rowError ? <p className="text-destructive text-xs">{rowError}</p> : null}
                       </div>
                     ) : (
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            startEdit(employee);
-                          }}
-                        >
-                          <Pencil className="size-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            startDeleteConfirm(employee.id);
-                          }}
-                        >
-                          <Trash2 className="size-3.5" />
-                          Delete
-                        </Button>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={generatingEmployeeId !== null}
+                            onClick={() => {
+                              void generateSignatures(employee);
+                            }}
+                          >
+                            {generatingEmployeeId === employee.id ? (
+                              <>
+                                <LoaderCircle className="size-3.5 animate-spin" />
+                                Generating...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="size-3.5" />
+                                Generate signatures
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              startEdit(employee);
+                            }}
+                          >
+                            <Pencil className="size-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              startDeleteConfirm(employee.id);
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                            Delete
+                          </Button>
+                        </div>
+                        {signatureErrors[employee.id] ? (
+                          <p className="text-destructive text-xs">{signatureErrors[employee.id]}</p>
+                        ) : null}
                       </div>
                     )}
                   </TableCell>

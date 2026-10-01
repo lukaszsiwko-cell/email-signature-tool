@@ -16,3 +16,8 @@ export interface CreateEmployeeInput {
   position: string;
   phone: string;
 }
+
+export interface SignatureArtifactsDTO {
+  outlookHtml: string;
+  thunderbirdInstaller: string;
+}

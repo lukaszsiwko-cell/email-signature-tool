@@ -184,19 +184,19 @@ No database migration or employee schema change is required. Generated files and
 #### Automated
 
 - [x] 1.1 `npm run smoke` covers generated outputs, escaping, missing logo, and cross-department denial — f8d3eba
-- [x] 1.2 `npx astro check` and `npm run lint` pass
+- [x] 1.2 `npx astro check` and `npm run lint` pass — 4e72f05
 - [x] 1.3 `npm run build` succeeds for Cloudflare Workers — f8d3eba
 
 ### Phase 2: Add per-employee generation and downloads
 
 #### Automated
 
-- [ ] 2.1 `npx astro check` and `npm run lint` pass
-- [ ] 2.2 `npm run build` succeeds
+- [x] 2.1 `npx astro check` and `npm run lint` pass
+- [x] 2.2 `npm run build` succeeds
 
 #### Manual
 
-- [ ] 2.3 Row action downloads both correctly named artifacts and handles pending, failure, and retry states
+- [x] 2.3 Row action downloads both correctly named artifacts and handles pending, failure, and retry states
 
 ### Phase 3: Verify real-client behavior and close the slice
 
