@@ -41,6 +41,21 @@ export async function listEmployees(supabase: SupabaseClient): Promise<EmployeeD
   return (data as EmployeeRow[]).map(toDTO);
 }
 
+/** Returns an employee visible to the caller, or null when RLS hides the row. */
+export async function getEmployeeById(supabase: SupabaseClient, id: string): Promise<EmployeeDTO | null> {
+  const { data, error } = await supabase
+    .from("employees")
+    .select("id, first_name, last_name, position, phone, created_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? toDTO(data) : null;
+}
+
 /**
  * Creates an employee in the caller's own department. The department is
  * always inferred server-side from the caller's profile — never taken from

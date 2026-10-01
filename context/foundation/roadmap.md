@@ -45,7 +45,7 @@ Help desk/IT staff at a company lose time manually setting up email signatures f
 | S-01 | add-and-list-employees              | add a new employee and see the list of employees in their own department       | F-01            | FR-002, FR-003, US-01             | done |
 | S-02 | edit-and-delete-employee            | edit or delete an existing employee record in their own department             | S-01             | FR-003                            | done |
 | S-03 | set-department-logo                 | set/update the logo/graphic used for their department's signatures             | F-01            | FR-008                            | done |
-| S-04 | generate-signature-scripts          | generate Outlook + Thunderbird signature scripts for an employee, branded with the department logo | S-01, S-03 (parallel) | FR-004, FR-005, US-01       | blocked  |
+| S-04 | generate-signature-scripts          | generate Outlook + Thunderbird signature scripts for an employee, branded with the department logo | S-01, S-03 (parallel) | FR-004, FR-005, US-01       | in-progress |
 | S-05 | email-signature-scripts-to-employee | (new employee) receive both scripts by email with instructions and run one to configure their signature | S-04            | FR-006, FR-007, US-01             | proposed |
 
 ## Streams
@@ -137,7 +137,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Does the target environment enforce a restrictive script-execution policy or require script signing? — Owner: user (with IT security). Block: yes — changes how the scripts must be produced (signed vs. unsigned), so it must resolve before this slice can be planned.
   - Which Outlook version(s) must the script support (classic vs. new Outlook)? — Owner: user. Block: yes — the two versions have different configuration mechanics; the answer changes what the Outlook script actually does.
 - **Risk:** This is the riskiest slice in the milestone — two different mail-client mechanics, one of them (Outlook) with a version-dependent implementation. Sequenced right after the data foundation so the two blocking decisions surface early rather than mid-build.
-- **Status:** blocked
+- **Status:** in-progress
 
 ### S-05: Email signature scripts to the new employee
 

@@ -48,7 +48,12 @@ async function request(path, { method = "GET", form, json, multipart, jar = "def
   });
   cookieJar.store(response);
   const body = await response.text();
-  return { status: response.status, location: response.headers.get("location") ?? "", body };
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    cacheControl: response.headers.get("cache-control") ?? "",
+    body,
+  };
 }
 
 // The signup page server-renders <option value="{uuid}">{name}</option> for each
@@ -62,9 +67,10 @@ async function fetchDepartments() {
 function check(name, actual, expected) {
   const statusOk = actual.status === expected.status;
   const locationOk = expected.location === undefined || actual.location.startsWith(expected.location);
+  const cacheControlOk = expected.cacheControl === undefined || actual.cacheControl.includes(expected.cacheControl);
   const includesOk = expected.bodyIncludes === undefined || actual.body.includes(expected.bodyIncludes);
   const excludesOk = expected.bodyExcludes === undefined || !actual.body.includes(expected.bodyExcludes);
-  const ok = statusOk && locationOk && includesOk && excludesOk;
+  const ok = statusOk && locationOk && cacheControlOk && includesOk && excludesOk;
 
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
@@ -83,6 +89,11 @@ function parseJson(body) {
   } catch {
     return null;
   }
+}
+
+function thunderbirdHtmlFromInstaller(installer) {
+  const match = installer.match(/FromBase64String\('([A-Za-z0-9+/=]+)'\)/);
+  return match ? Buffer.from(match[1], "base64").toString("utf8") : "";
 }
 
 function objectPathFromSignedUrl(url) {
@@ -121,6 +132,8 @@ const editedFirstName = `SmokeEdited-${runId}`;
 // steps can target the real id without hardcoding it.
 const state = {
   employeeId: null,
+  signatureEmployeeAId: null,
+  signatureEmployeeBId: null,
   firstLogoUrl: null,
   firstLogoPath: "",
   replacementLogoUrl: null,
@@ -140,6 +153,11 @@ const steps = [
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["employees page redirects anonymous user", () => request("/employees"), { status: 302, location: "/auth/signin" }],
   ["GET /api/employees rejects anonymous user", () => request("/api/employees"), { status: 401 }],
+  [
+    "POST employee signatures rejects anonymous user",
+    () => request("/api/employees/anonymous/signatures", { method: "POST" }),
+    { status: 401 },
+  ],
   [
     "signup creates account (department A)",
     () => request("/api/auth/signup", { method: "POST", form: { email: emailA, password, departmentId: deptA.id } }),
@@ -231,6 +249,24 @@ const steps = [
     "second user signs in",
     () => request("/api/auth/signin", { method: "POST", form: { email: emailB, password }, jar: "userB" }),
     { status: 302, location: "/" },
+  ],
+  [
+    "second user clears a logo left by an earlier smoke run",
+    () => request("/api/departments/logo", { method: "DELETE", jar: "userB" }),
+    { status: 204 },
+  ],
+  [
+    "second user adds a signature employee before setting a logo",
+    async () => {
+      const res = await request("/api/employees", {
+        method: "POST",
+        json: { firstName: "SmokeB", lastName: `Signature-${runId}`, position: "Tester", phone: "" },
+        jar: "userB",
+      });
+      if (res.status === 201) state.signatureEmployeeBId = JSON.parse(res.body).id;
+      return res;
+    },
+    { status: 201, bodyIncludes: "Signature-" },
   ],
   [
     "second user (different department) cannot see first user's employee",
@@ -328,6 +364,107 @@ const steps = [
     { status: 200, bodyIncludes: "replacement bytes match" },
   ],
   [
+    "first user adds a signature employee with HTML-sensitive data",
+    async () => {
+      const res = await request("/api/employees", {
+        method: "POST",
+        json: {
+          firstName: "Smoke <script>alert(1)</script>",
+          lastName: `Signature-${runId}`,
+          position: "Tester & Support",
+          phone: "+48 600 000 009",
+        },
+      });
+      if (res.status === 201) state.signatureEmployeeAId = JSON.parse(res.body).id;
+      return res;
+    },
+    { status: 201, bodyIncludes: "Signature-" },
+  ],
+  [
+    "first user gets escaped signatures with a private inline logo",
+    async () => {
+      const res = await request(`/api/employees/${state.signatureEmployeeAId}/signatures`, { method: "POST" });
+      const artifacts = parseJson(res.body);
+      const thunderbirdHtml = artifacts?.thunderbirdInstaller
+        ? thunderbirdHtmlFromInstaller(artifacts.thunderbirdInstaller)
+        : "";
+      const body = artifacts
+        ? `${artifacts.outlookHtml}\n${artifacts.thunderbirdInstaller}\n${thunderbirdHtml}`
+        : res.body;
+      const valid =
+        typeof artifacts?.outlookHtml === "string" &&
+        typeof artifacts?.thunderbirdInstaller === "string" &&
+        thunderbirdHtml === artifacts.outlookHtml &&
+        artifacts.outlookHtml.includes("&lt;script&gt;") &&
+        artifacts.outlookHtml.includes("&amp; Support") &&
+        artifacts.outlookHtml.includes("data:image/svg+xml;base64,") &&
+        artifacts.thunderbirdInstaller.includes("mail.identity.") &&
+        !artifacts.thunderbirdInstaller.includes("<script>") &&
+        !body.includes("supabase.co") &&
+        !body.includes("storage/v1/object");
+      return {
+        ...res,
+        status: valid ? 200 : res.status === 200 ? 500 : res.status,
+        body,
+      };
+    },
+    {
+      status: 200,
+      cacheControl: "no-store",
+      bodyIncludes: "&lt;script&gt;",
+      bodyExcludes: "<script>alert(1)</script>",
+    },
+  ],
+  [
+    "second user gets text-only signatures when no logo is configured",
+    async () => {
+      const res = await request(`/api/employees/${state.signatureEmployeeBId}/signatures`, {
+        method: "POST",
+        jar: "userB",
+      });
+      const artifacts = parseJson(res.body);
+      const thunderbirdHtml = artifacts?.thunderbirdInstaller
+        ? thunderbirdHtmlFromInstaller(artifacts.thunderbirdInstaller)
+        : "";
+      const body = artifacts
+        ? `${artifacts.outlookHtml}\n${artifacts.thunderbirdInstaller}\n${thunderbirdHtml}`
+        : res.body;
+      const valid =
+        typeof artifacts?.outlookHtml === "string" &&
+        typeof artifacts?.thunderbirdInstaller === "string" &&
+        thunderbirdHtml === artifacts.outlookHtml &&
+        artifacts.outlookHtml.includes("SmokeB Signature-") &&
+        !artifacts.outlookHtml.includes("<img") &&
+        !body.includes("supabase.co");
+      return {
+        ...res,
+        status: valid ? 200 : res.status === 200 ? 500 : res.status,
+        body,
+      };
+    },
+    { status: 200, cacheControl: "no-store", bodyIncludes: "SmokeB Signature-", bodyExcludes: "<img" },
+  ],
+  [
+    "second department cannot generate the first department employee's signatures",
+    () => request(`/api/employees/${state.signatureEmployeeAId}/signatures`, { method: "POST", jar: "userB" }),
+    { status: 404 },
+  ],
+  [
+    "first department cannot generate the second department employee's signatures",
+    () => request(`/api/employees/${state.signatureEmployeeBId}/signatures`, { method: "POST" }),
+    { status: 404 },
+  ],
+  [
+    "first user deletes their signature employee",
+    () => request(`/api/employees/${state.signatureEmployeeAId}`, { method: "DELETE" }),
+    { status: 204 },
+  ],
+  [
+    "second user deletes their signature employee",
+    () => request(`/api/employees/${state.signatureEmployeeBId}`, { method: "DELETE", jar: "userB" }),
+    { status: 204 },
+  ],
+  [
     "second user uploads a separate department logo",
     async () => {
       const res = await uploadLogo(initialLogoFile, "userB");
@@ -345,6 +482,11 @@ const steps = [
       };
     },
     { status: 200, bodyIncludes: "different storage key" },
+  ],
+  [
+    "second user removes their smoke-test department logo",
+    () => request("/api/departments/logo", { method: "DELETE", jar: "userB" }),
+    { status: 204 },
   ],
   [
     "second user's logo does not affect the first user's logo",

@@ -10,6 +10,11 @@ interface DepartmentLogoProfileRow {
   departments: { logo_url: string | null } | { logo_url: string | null }[] | null;
 }
 
+export interface DepartmentLogoAsset {
+  data: Uint8Array;
+  contentType: string;
+}
+
 async function getOwnDepartmentId(supabase: SupabaseClient): Promise<string> {
   const {
     data: { user },
@@ -78,6 +83,50 @@ export async function getDepartmentLogoUrl(supabase: SupabaseClient): Promise<st
   }
 
   return data.signedUrl;
+}
+
+/**
+ * Downloads the caller's department logo through Storage RLS for generated
+ * artifacts. The returned bytes never pass through a public or signed URL.
+ */
+export async function getDepartmentLogoAsset(supabase: SupabaseClient): Promise<DepartmentLogoAsset | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("department_id, departments!inner(logo_url)")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  const logoKey = getLogoKey(profile);
+  if (!logoKey) {
+    return null;
+  }
+
+  const { data, error } = await supabase.storage.from(DEPARTMENT_LOGOS_BUCKET).download(logoKey);
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const contentType = data.type.toLowerCase();
+  if (!["image/png", "image/jpeg", "image/svg+xml"].includes(contentType) || data.size > 2 * 1024 * 1024) {
+    throw new Error("Department logo has an unsupported type or size");
+  }
+
+  return {
+    data: new Uint8Array(await data.arrayBuffer()),
+    contentType,
+  };
 }
 
 /**
