@@ -183,9 +183,9 @@ No database migration or employee schema change is required. Generated files and
 
 #### Automated
 
-- [x] 1.1 `npm run smoke` covers generated outputs, escaping, missing logo, and cross-department denial
-- [x] 1.2 `npx astro check` and `npm run lint` pass
-- [x] 1.3 `npm run build` succeeds for Cloudflare Workers
+- [x] 1.1 `npm run smoke` covers generated outputs, escaping, missing logo, and cross-department denial — f8d3eba
+- [x] 1.2 `npx astro check` and `npm run lint` pass — f8d3eba
+- [x] 1.3 `npm run build` succeeds for Cloudflare Workers — f8d3eba
 
 ### Phase 2: Add per-employee generation and downloads
 
