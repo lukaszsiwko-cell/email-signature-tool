@@ -7,6 +7,7 @@ import EmployeeTable from "@/components/employees/EmployeeTable";
 import { createClient } from "@/lib/supabase";
 import { getDepartmentLogoUrl } from "@/lib/services/departments";
 import { listEmployees } from "@/lib/services/employees";
+import { isEmailDeliveryConfigured } from "@/lib/services/email-service";
 import type { EmployeeDTO } from "@/types";
 
 const supabase = createClient(Astro.request.headers, Astro.cookies);
@@ -43,7 +44,7 @@ if (supabase) {
           ) : employees.length === 0 ? (
             <p class="text-sm text-muted-foreground">No employees yet. Add your first employee above.</p>
           ) : (
-            <EmployeeTable employees={employees} client:load />
+            <EmployeeTable employees={employees} emailDeliveryEnabled={isEmailDeliveryConfigured()} client:load />
           )}
         </div>
       </div>

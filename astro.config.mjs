@@ -11,6 +11,9 @@ export default defineConfig({
   output: "server",
   integrations: [react(), sitemap()],
   vite: {
+    optimizeDeps: {
+      include: ["lucide-react"],
+    },
     plugins: [tailwindcss()],
   },
   adapter: cloudflare(),
@@ -18,6 +21,8 @@ export default defineConfig({
     schema: {
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      EMAIL_FROM: envField.string({ context: "server", access: "secret", optional: true }),
+      PUBLIC_APP_URL: envField.string({ context: "server", access: "secret", optional: true }),
     },
   },
 });

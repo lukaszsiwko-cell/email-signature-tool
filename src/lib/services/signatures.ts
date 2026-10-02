@@ -6,6 +6,7 @@ const ALLOWED_LOGO_TYPES = new Set(["image/png", "image/jpeg", "image/svg+xml"])
 export interface SignatureArtifacts {
   outlookHtml: string;
   thunderbirdInstaller: string;
+  thunderbirdLauncher: string;
 }
 
 function escapeHtml(value: string): string {
@@ -53,8 +54,10 @@ function createThunderbirdInstaller(signatureHtml: string): string {
 
   return String.raw`$ErrorActionPreference = 'Stop'
 $signatureHtml = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${signatureHtmlBase64}'))
-$thunderbirdProcess = Get-Process -Name 'thunderbird' -ErrorAction SilentlyContinue
-if ($thunderbirdProcess) { throw 'Close Thunderbird before running this installer.' }
+while (Get-Process -Name 'thunderbird' -ErrorAction SilentlyContinue) {
+  Write-Host 'Save your work and close Thunderbird before continuing.'
+  Read-Host 'Press Enter to check again, or Ctrl+C to cancel' | Out-Null
+}
 
 $thunderbirdRoot = Join-Path $env:APPDATA 'Thunderbird'
 $profilesIni = Join-Path $thunderbirdRoot 'profiles.ini'
@@ -169,6 +172,17 @@ Write-Host ('Backup saved to {0}.' -f $backupDirectory)
 `;
 }
 
+function createThunderbirdLauncher(): string {
+  return String.raw`@echo off
+setlocal
+set "THUNDERBIRD_INSTALLER=%~dpn0.ps1"
+powershell.exe -NoProfile -Command "$ErrorActionPreference = 'Stop'; $policies = @(Get-ExecutionPolicy -List); $groupPolicy = @($policies | Where-Object { $_.Scope -in @('MachinePolicy', 'UserPolicy') -and $_.ExecutionPolicy -ne 'Undefined' }); $blockedPolicy = @($groupPolicy | Where-Object { $_.ExecutionPolicy -in @('Restricted', 'AllSigned') }); if ($blockedPolicy.Count -gt 0) { throw 'PowerShell script execution is restricted by your organization. Contact IT.' }; if ($groupPolicy.Count -eq 0) { Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned }; $installer = $env:THUNDERBIRD_INSTALLER; if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Keep the launcher next to its matching .ps1 installer.' }; Unblock-File -LiteralPath $installer; & $installer"
+set "EXIT_CODE=%ERRORLEVEL%"
+pause
+exit /b %EXIT_CODE%
+`;
+}
+
 export function generateSignatureArtifacts(
   employee: EmployeeDTO,
   logo: DepartmentLogoAsset | null,
@@ -181,5 +195,6 @@ export function generateSignatureArtifacts(
   return {
     outlookHtml,
     thunderbirdInstaller: createThunderbirdInstaller(outlookHtml),
+    thunderbirdLauncher: createThunderbirdLauncher(),
   };
 }

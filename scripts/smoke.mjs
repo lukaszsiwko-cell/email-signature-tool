@@ -1,5 +1,6 @@
 // Smoke test: proves the built app, the Cloudflare adapter and the Supabase auth flow still work together.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 node scripts/smoke.mjs
+import { sendSignatureEmail } from "../src/lib/services/email-service-client.mjs";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:4321";
 const password = "Smoke-Test-Passw0rd!";
@@ -132,8 +133,10 @@ const editedFirstName = `SmokeEdited-${runId}`;
 // steps can target the real id without hardcoding it.
 const state = {
   employeeId: null,
+  optionalEmailEmployeeId: null,
   signatureEmployeeAId: null,
   signatureEmployeeBId: null,
+  signatureDownloadToken: "",
   firstLogoUrl: null,
   firstLogoPath: "",
   replacementLogoUrl: null,
@@ -149,6 +152,127 @@ const expectedInitialLogoBody = initialLogoPng.toString("base64");
 const expectedReplacementLogoBody = replacementLogoSvg.toString("base64");
 
 const steps = [
+  [
+    "Cloudflare Email Service receives only recipient, sender, subject, and one-time link",
+    async () => {
+      let sentMessage;
+      try {
+        await sendSignatureEmail(
+          {
+            send: async (message) => {
+              sentMessage = message;
+              return { messageId: "mock-message-id" };
+            },
+          },
+          {
+            fromAddress: "signatures@example.test",
+            publicAppUrl: "https://signatures.example.test",
+            allowLocalHttp: false,
+          },
+          { to: "employee@example.test", token: "a".repeat(64) },
+        );
+        const valid =
+          Object.keys(sentMessage).sort().join(",") === "from,subject,text,to" &&
+          sentMessage.from === "signatures@example.test" &&
+          sentMessage.to === "employee@example.test" &&
+          sentMessage.text.includes("https://signatures.example.test/download-signatures#") &&
+          !sentMessage.text.includes("thunderbirdInstaller") &&
+          !sentMessage.text.includes("artifact_bundle");
+        return {
+          status: valid ? 200 : 500,
+          location: "",
+          body: valid ? "email binding contract valid" : "invalid email message",
+        };
+      } catch {
+        return { status: 500, location: "", body: "email binding call threw" };
+      }
+    },
+    { status: 200, bodyIncludes: "email binding contract valid" },
+  ],
+  [
+    "Cloudflare Email Service rejects an insecure public app URL before sending",
+    async () => {
+      let sendCalled = false;
+      try {
+        await sendSignatureEmail(
+          {
+            send: async () => {
+              sendCalled = true;
+              return { messageId: "mock-message-id" };
+            },
+          },
+          {
+            fromAddress: "signatures@example.test",
+            publicAppUrl: "http://signatures.example.test",
+            allowLocalHttp: false,
+          },
+          { to: "employee@example.test", token: "b".repeat(64) },
+        );
+      } catch (error) {
+        return {
+          status:
+            !sendCalled && error instanceof Error && error.message === "Public app URL must use HTTPS" ? 200 : 500,
+          location: "",
+          body: "email HTTPS policy checked",
+        };
+      }
+      return { status: 500, location: "", body: "insecure app URL was accepted" };
+    },
+    { status: 200, bodyIncludes: "email HTTPS policy checked" },
+  ],
+  [
+    "Cloudflare Email Service rejects missing configuration before sending",
+    async () => {
+      let sendCalled = false;
+      try {
+        await sendSignatureEmail(
+          {
+            send: async () => {
+              sendCalled = true;
+              return { messageId: "mock-message-id" };
+            },
+          },
+          { fromAddress: "", publicAppUrl: "", allowLocalHttp: false },
+          { to: "employee@example.test", token: "d".repeat(64) },
+        );
+      } catch (error) {
+        const valid =
+          !sendCalled && error instanceof Error && error.message === "Cloudflare Email Service is not configured";
+        return { status: valid ? 200 : 500, location: "", body: valid ? error.message : "invalid config handling" };
+      }
+      return { status: 500, location: "", body: "missing email configuration was accepted" };
+    },
+    { status: 200, bodyIncludes: "Cloudflare Email Service is not configured" },
+  ],
+  [
+    "Cloudflare Email Service errors do not expose provider details",
+    async () => {
+      try {
+        await sendSignatureEmail(
+          {
+            send: async () => {
+              throw new Error("private provider diagnostic");
+            },
+          },
+          {
+            fromAddress: "signatures@example.test",
+            publicAppUrl: "https://signatures.example.test",
+            allowLocalHttp: false,
+          },
+          { to: "employee@example.test", token: "e".repeat(64) },
+        );
+        return { status: 500, location: "", body: "provider failure was accepted" };
+      } catch (error) {
+        const valid = error instanceof Error && error.message === "Cloudflare Email Service rejected the message";
+        return { status: valid ? 200 : 500, location: "", body: valid ? error.message : "unsafe network error" };
+      }
+    },
+    {
+      status: 200,
+      bodyIncludes: "Cloudflare Email Service rejected the message",
+      bodyExcludes: "private provider diagnostic",
+    },
+  ],
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["employees page redirects anonymous user", () => request("/employees"), { status: 302, location: "/auth/signin" }],
@@ -156,6 +280,11 @@ const steps = [
   [
     "POST employee signatures rejects anonymous user",
     () => request("/api/employees/anonymous/signatures", { method: "POST" }),
+    { status: 401 },
+  ],
+  [
+    "POST employee signature email rejects anonymous user",
+    () => request("/api/employees/anonymous/send-signatures", { method: "POST" }),
     { status: 401 },
   ],
   [
@@ -173,6 +302,19 @@ const steps = [
     () => request("/api/auth/signin", { method: "POST", form: { email: emailA, password } }),
     { status: 302, location: "/" },
   ],
+  [
+    "home shows the signature workspace after sign-in",
+    async () => {
+      const res = await request("/");
+      const valid =
+        res.status === 200 &&
+        res.body.includes("Signatures that feel like your team.") &&
+        res.body.includes("Signature preview") &&
+        !res.body.includes("Authentication Ready");
+      return { ...res, status: valid ? 200 : res.status === 200 ? 500 : res.status };
+    },
+    { status: 200, bodyIncludes: "Signature preview" },
+  ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   [
     "employees page renders for signed-in user (before adding)",
@@ -184,7 +326,13 @@ const steps = [
     async () => {
       const res = await request("/api/employees", {
         method: "POST",
-        json: { firstName: "Smoke", lastName: employeeLastName, position: "Tester", phone: "+48 600 000 000" },
+        json: {
+          firstName: "Smoke",
+          lastName: employeeLastName,
+          email: `smoke-${runId}@example.test`,
+          position: "Tester",
+          phone: "+48 600 000 000",
+        },
       });
       if (res.status === 201) {
         try {
@@ -195,20 +343,89 @@ const steps = [
       }
       return res;
     },
-    { status: 201, bodyIncludes: employeeLastName },
+    { status: 201, bodyIncludes: `smoke-${runId}@example.test` },
   ],
   [
-    "add employee rejects missing field",
-    () => request("/api/employees", { method: "POST", json: { firstName: "Smoke", position: "Tester", phone: "1" } }),
+    "add employee without email",
+    async () => {
+      const res = await request("/api/employees", {
+        method: "POST",
+        json: { firstName: "Smoke", lastName: `MissingEmail-${runId}`, position: "Tester", phone: "1" },
+      });
+      const employee = parseJson(res.body);
+      if (res.status === 201) state.optionalEmailEmployeeId = employee?.id ?? null;
+      const valid = res.status === 201 && employee?.email === null;
+      return { ...res, status: valid ? 201 : res.status === 201 ? 500 : res.status };
+    },
+    { status: 201, bodyIncludes: '"email":null' },
+  ],
+  [
+    "employee without email can be assigned one",
+    () =>
+      request(`/api/employees/${state.optionalEmailEmployeeId}`, {
+        method: "PUT",
+        json: {
+          firstName: "Smoke",
+          lastName: `MissingEmail-${runId}`,
+          email: `optional-${runId}@example.test`,
+          position: "Tester",
+          phone: "1",
+        },
+      }),
+    { status: 200, bodyIncludes: `optional-${runId}@example.test` },
+  ],
+  [
+    "employee email can be cleared",
+    () =>
+      request(`/api/employees/${state.optionalEmailEmployeeId}`, {
+        method: "PUT",
+        json: {
+          firstName: "Smoke",
+          lastName: `MissingEmail-${runId}`,
+          email: "",
+          position: "Tester",
+          phone: "1",
+        },
+      }),
+    { status: 200, bodyIncludes: '"email":null' },
+  ],
+  [
+    "add employee rejects invalid email",
+    () =>
+      request("/api/employees", {
+        method: "POST",
+        json: {
+          firstName: "Smoke",
+          lastName: `InvalidEmail-${runId}`,
+          email: "not-an-email",
+          position: "Tester",
+          phone: "1",
+        },
+      }),
     { status: 400, bodyIncludes: "Validation failed" },
   ],
   [
     "employees page lists the newly added employee",
     () => request("/employees"),
-    { status: 200, bodyIncludes: employeeLastName },
+    { status: 200, bodyIncludes: `smoke-${runId}@example.test` },
   ],
   [
     "edit employee via API (PUT)",
+    () =>
+      request(`/api/employees/${state.employeeId}`, {
+        method: "PUT",
+        json: {
+          firstName: editedFirstName,
+          lastName: employeeLastName,
+          email: `updated-${runId}@example.test`,
+          position: "Senior Tester",
+          phone: "+48 600 000 001",
+        },
+      }),
+    { status: 200, bodyIncludes: `updated-${runId}@example.test` },
+  ],
+  [
+    "edit employee preserves email when omitted",
     () =>
       request(`/api/employees/${state.employeeId}`, {
         method: "PUT",
@@ -219,7 +436,7 @@ const steps = [
           phone: "+48 600 000 001",
         },
       }),
-    { status: 200, bodyIncludes: editedFirstName },
+    { status: 200, bodyIncludes: `updated-${runId}@example.test` },
   ],
   [
     "edit employee rejects missing field",
@@ -260,7 +477,13 @@ const steps = [
     async () => {
       const res = await request("/api/employees", {
         method: "POST",
-        json: { firstName: "SmokeB", lastName: `Signature-${runId}`, position: "Tester", phone: "" },
+        json: {
+          firstName: "SmokeB",
+          lastName: `Signature-${runId}`,
+          email: `smoke-b-${runId}@example.test`,
+          position: "Tester",
+          phone: "",
+        },
         jar: "userB",
       });
       if (res.status === 201) state.signatureEmployeeBId = JSON.parse(res.body).id;
@@ -371,6 +594,7 @@ const steps = [
         json: {
           firstName: "Smoke <script>alert(1)</script>",
           lastName: `Signature-${runId}`,
+          email: `signature-${runId}@example.test`,
           position: "Tester & Support",
           phone: "+48 600 000 009",
         },
@@ -394,11 +618,16 @@ const steps = [
       const valid =
         typeof artifacts?.outlookHtml === "string" &&
         typeof artifacts?.thunderbirdInstaller === "string" &&
+        typeof artifacts?.thunderbirdLauncher === "string" &&
         thunderbirdHtml === artifacts.outlookHtml &&
         artifacts.outlookHtml.includes("&lt;script&gt;") &&
         artifacts.outlookHtml.includes("&amp; Support") &&
         artifacts.outlookHtml.includes("data:image/svg+xml;base64,") &&
         artifacts.thunderbirdInstaller.includes("mail.identity.") &&
+        artifacts.thunderbirdInstaller.includes("Press Enter to check again") &&
+        artifacts.thunderbirdLauncher.includes("Unblock-File") &&
+        artifacts.thunderbirdLauncher.includes("-Scope Process -ExecutionPolicy RemoteSigned") &&
+        artifacts.thunderbirdLauncher.includes("MachinePolicy") &&
         !artifacts.thunderbirdInstaller.includes("<script>") &&
         !body.includes("supabase.co") &&
         !body.includes("storage/v1/object");
@@ -414,6 +643,92 @@ const steps = [
       bodyIncludes: "&lt;script&gt;",
       bodyExcludes: "<script>alert(1)</script>",
     },
+  ],
+  [
+    "second department cannot send the first user's signature email",
+    () =>
+      request(`/api/employees/${state.signatureEmployeeAId}/send-signatures`, {
+        method: "POST",
+        jar: "userB",
+      }),
+    { status: 404 },
+  ],
+  [
+    "first user issues a one-time signature download",
+    async () => {
+      const res = await request(`/api/employees/${state.signatureEmployeeAId}/signature-deliveries`, { method: "POST" });
+      const delivery = parseJson(res.body);
+      const downloadUrl = typeof delivery?.downloadUrl === "string" ? new URL(delivery.downloadUrl, BASE_URL) : null;
+      const token = downloadUrl?.hash.slice(1) ?? "";
+      const valid =
+        res.status === 201 &&
+        downloadUrl?.pathname === "/download-signatures" &&
+        /^[0-9a-f]{64}$/.test(token) &&
+        Date.parse(delivery.expiresAt) > Date.now();
+      if (valid) state.signatureDownloadToken = token;
+      return { ...res, status: valid ? 201 : res.status === 201 ? 500 : res.status };
+    },
+    { status: 201, bodyIncludes: "/download-signatures#" },
+  ],
+  [
+    "recipient page opens without consuming the link",
+    () => request("/download-signatures", { jar: "recipient" }),
+    { status: 200 },
+  ],
+  [
+    "another department cannot issue a signature download",
+    () =>
+      request(`/api/employees/${state.signatureEmployeeAId}/signature-deliveries`, {
+        method: "POST",
+        jar: "userB",
+      }),
+    { status: 404 },
+  ],
+  [
+    "concurrent recipient redemptions return the artifact bundle once",
+    async () => {
+      const [firstAttempt, secondAttempt] = await Promise.all([
+        request("/api/signature-download/redeem", {
+          method: "POST",
+          json: { token: state.signatureDownloadToken },
+          jar: "recipient",
+        }),
+        request("/api/signature-download/redeem", {
+          method: "POST",
+          json: { token: state.signatureDownloadToken },
+          jar: "recipient-retry",
+        }),
+      ]);
+      const successfulResponses = [firstAttempt, secondAttempt].filter((attempt) => attempt.status === 200);
+      const unavailableResponses = [firstAttempt, secondAttempt].filter((attempt) => attempt.status === 404);
+      const artifacts = successfulResponses.length === 1 ? parseJson(successfulResponses[0].body) : null;
+      const valid =
+        successfulResponses.length === 1 &&
+        unavailableResponses.length === 1 &&
+        firstAttempt.cacheControl.includes("no-store") &&
+        secondAttempt.cacheControl.includes("no-store") &&
+        typeof artifacts?.outlookHtml === "string" &&
+        typeof artifacts?.thunderbirdInstaller === "string" &&
+        typeof artifacts?.thunderbirdLauncher === "string" &&
+        artifacts.outlookHtml.includes("data:image/svg+xml;base64,");
+      return {
+        status: valid ? 200 : 500,
+        location: "",
+        cacheControl: successfulResponses[0]?.cacheControl ?? "",
+        body: successfulResponses[0]?.body ?? "missing artifact bundle",
+      };
+    },
+    { status: 200, cacheControl: "no-store", bodyIncludes: "thunderbirdLauncher" },
+  ],
+  [
+    "redeemed signature download cannot be replayed",
+    () =>
+      request("/api/signature-download/redeem", {
+        method: "POST",
+        json: { token: state.signatureDownloadToken },
+        jar: "recipient-replay",
+      }),
+    { status: 404, cacheControl: "no-store", bodyIncludes: "This download link is unavailable" },
   ],
   [
     "second user gets text-only signatures when no logo is configured",
@@ -432,6 +747,7 @@ const steps = [
       const valid =
         typeof artifacts?.outlookHtml === "string" &&
         typeof artifacts?.thunderbirdInstaller === "string" &&
+        typeof artifacts?.thunderbirdLauncher === "string" &&
         thunderbirdHtml === artifacts.outlookHtml &&
         artifacts.outlookHtml.includes("SmokeB Signature-") &&
         !artifacts.outlookHtml.includes("<img") &&
@@ -511,6 +827,11 @@ const steps = [
     "employees page shows the no-logo placeholder after removal",
     () => request("/employees"),
     { status: 200, bodyIncludes: "No logo set" },
+  ],
+  [
+    "first user deletes the optional-email employee",
+    () => request(`/api/employees/${state.optionalEmailEmployeeId}`, { method: "DELETE" }),
+    { status: 204 },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],

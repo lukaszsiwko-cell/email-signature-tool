@@ -3,7 +3,7 @@ project: "Email Signature Tool"
 version: 1
 status: draft
 created: 2026-09-21
-updated: 2026-10-01
+updated: 2026-10-02
 prd_version: 1
 main_goal: speed
 top_blocker: decisions
@@ -46,7 +46,7 @@ Help desk/IT staff at a company lose time manually setting up email signatures f
 | S-02 | edit-and-delete-employee            | edit or delete an existing employee record in their own department             | S-01             | FR-003                            | done |
 | S-03 | set-department-logo                 | set/update the logo/graphic used for their department's signatures             | F-01            | FR-008                            | done |
 | S-04 | generate-signature-scripts          | generate Outlook + Thunderbird signature scripts for an employee, branded with the department logo | S-01, S-03 (parallel) | FR-004, FR-005, US-01       | in-progress |
-| S-05 | email-signature-scripts-to-employee | (new employee) receive both scripts by email with instructions and run one to configure their signature | S-04            | FR-006, FR-007, US-01             | proposed |
+| S-05 | email-signature-scripts-to-employee | (new employee) receive both scripts by email with instructions and run one to configure their signature | S-04            | FR-006, FR-007, US-01             | in-progress |
 
 ## Streams
 
@@ -149,7 +149,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Completes the literal Primary Success Criterion — the loop only counts as proven once an email actually lands with a runnable script. Depends entirely on S-04's output being correct, so any drift there surfaces here during verification.
-- **Status:** proposed
+- **Status:** in-progress
 
 ## Backlog Handoff
 

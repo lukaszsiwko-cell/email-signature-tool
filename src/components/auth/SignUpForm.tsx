@@ -98,7 +98,7 @@ export default function SignUpForm({ serverError, departments }: Props) {
           className={cn(
             selectBase,
             departmentId ? "text-white" : "text-white/40",
-            errors.departmentId ? "border-red-400/60 focus:ring-red-400" : "border-white/20 focus:ring-purple-400",
+            errors.departmentId ? "border-red-400/60 focus:ring-red-400" : "focus:ring-primary border-white/20",
           )}
         >
           <option value="" disabled className="bg-slate-900 text-white">

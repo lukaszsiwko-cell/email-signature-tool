@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, CircleAlert, Download, LoaderCircle, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, CircleAlert, Download, LoaderCircle, Mail, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,8 @@ function phoneLooksValid(value: string): boolean {
 function sanitizeFilename(value: string): string {
   return value
     .normalize("NFKC")
-    .replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, "-")
+    .replace(/[<>:"/\\|?*]/g, "-")
+    .replace(/\p{Cc}/gu, "-")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^[. -]+|[. -]+$/g, "")
@@ -36,12 +37,15 @@ function downloadArtifact(contents: string, contentType: string, filename: strin
   document.body.append(link);
   link.click();
   link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  window.setTimeout(() => {
+    URL.revokeObjectURL(objectUrl);
+  }, 0);
 }
 
 interface Draft {
   firstName: string;
   lastName: string;
+  email: string;
   position: string;
   phone: string;
 }
@@ -54,11 +58,17 @@ interface DraftErrors {
 
 interface EmployeeTableProps {
   employees: EmployeeDTO[];
+  emailDeliveryEnabled: boolean;
 }
 
-export default function EmployeeTable({ employees }: EmployeeTableProps) {
+interface DeliveryMessage {
+  kind: "success" | "error";
+  text: string;
+}
+
+export default function EmployeeTable({ employees, emailDeliveryEnabled }: EmployeeTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Draft>({ firstName: "", lastName: "", position: "", phone: "" });
+  const [draft, setDraft] = useState<Draft>({ firstName: "", lastName: "", email: "", position: "", phone: "" });
   const [draftErrors, setDraftErrors] = useState<DraftErrors>({});
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
@@ -66,12 +76,15 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [generatingEmployeeId, setGeneratingEmployeeId] = useState<string | null>(null);
   const [signatureErrors, setSignatureErrors] = useState<Record<string, string>>({});
+  const [sendingEmployeeId, setSendingEmployeeId] = useState<string | null>(null);
+  const [deliveryMessages, setDeliveryMessages] = useState<Record<string, DeliveryMessage>>({});
 
   function startEdit(employee: EmployeeDTO) {
     setEditingId(employee.id);
     setDraft({
       firstName: employee.firstName,
       lastName: employee.lastName,
+      email: employee.email ?? "",
       position: employee.position,
       phone: employee.phone,
     });
@@ -162,9 +175,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
 
     setGeneratingEmployeeId(employee.id);
     setSignatureErrors((current) => {
-      const next = { ...current };
-      delete next[employee.id];
-      return next;
+      return Object.fromEntries(Object.entries(current).filter(([id]) => id !== employee.id));
     });
 
     try {
@@ -179,7 +190,11 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
         return;
       }
 
-      if (typeof body?.outlookHtml !== "string" || typeof body.thunderbirdInstaller !== "string") {
+      if (
+        typeof body?.outlookHtml !== "string" ||
+        typeof body.thunderbirdInstaller !== "string" ||
+        typeof body.thunderbirdLauncher !== "string"
+      ) {
         setSignatureErrors((current) => ({ ...current, [employee.id]: "Invalid signature response" }));
         return;
       }
@@ -194,10 +209,45 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
         "text/plain;charset=utf-8",
         `${filenameBase}-thunderbird-installer.ps1`,
       );
+      downloadArtifact(
+        artifacts.thunderbirdLauncher,
+        "text/plain;charset=utf-8",
+        `${filenameBase}-thunderbird-installer.cmd`,
+      );
     } catch {
       setSignatureErrors((current) => ({ ...current, [employee.id]: "Failed to generate signatures" }));
     } finally {
       setGeneratingEmployeeId(null);
+    }
+  }
+
+  async function sendSignatures(employee: EmployeeDTO) {
+    if (!employee.email || sendingEmployeeId !== null) return;
+
+    setSendingEmployeeId(employee.id);
+    setDeliveryMessages((current) => Object.fromEntries(Object.entries(current).filter(([id]) => id !== employee.id)));
+    try {
+      const response = await fetch(`/api/employees/${employee.id}/send-signatures`, { method: "POST" });
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        setDeliveryMessages((current) => ({
+          ...current,
+          [employee.id]: { kind: "error", text: body?.error ?? "Failed to send signature email" },
+        }));
+        return;
+      }
+
+      setDeliveryMessages((current) => ({
+        ...current,
+        [employee.id]: { kind: "success", text: "Signature files sent." },
+      }));
+    } catch {
+      setDeliveryMessages((current) => ({
+        ...current,
+        [employee.id]: { kind: "error", text: "Failed to send signature email" },
+      }));
+    } finally {
+      setSendingEmployeeId(null);
     }
   }
 
@@ -215,6 +265,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
         <TableRow className="border-border hover:bg-transparent">
           <TableHead className="text-muted-foreground">First name</TableHead>
           <TableHead className="text-muted-foreground">Last name</TableHead>
+          <TableHead className="text-muted-foreground">Email</TableHead>
           <TableHead className="text-muted-foreground">Position</TableHead>
           <TableHead className="text-muted-foreground">Phone</TableHead>
           <TableHead className="text-muted-foreground">Actions</TableHead>
@@ -262,6 +313,17 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                         {draftErrors.lastName}
                       </p>
                     ) : null}
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      className="h-8"
+                      type="email"
+                      value={draft.email}
+                      onChange={(e) => {
+                        setDraft((prev) => ({ ...prev, email: e.target.value }));
+                      }}
+                      aria-label="Employee email"
+                    />
                   </TableCell>
                   <TableCell>
                     <Input
@@ -315,6 +377,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                 <>
                   <TableCell>{employee.firstName}</TableCell>
                   <TableCell>{employee.lastName}</TableCell>
+                  <TableCell>{employee.email ?? "—"}</TableCell>
                   <TableCell>{employee.position}</TableCell>
                   <TableCell>{employee.phone}</TableCell>
                   <TableCell>
@@ -352,7 +415,7 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                             type="button"
                             size="sm"
                             variant="outline"
-                            disabled={generatingEmployeeId !== null}
+                            disabled={generatingEmployeeId !== null || sendingEmployeeId !== null}
                             onClick={() => {
                               void generateSignatures(employee);
                             }}
@@ -366,6 +429,39 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                               <>
                                 <Download className="size-3.5" />
                                 Generate signatures
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={
+                              !employee.email ||
+                              !emailDeliveryEnabled ||
+                              sendingEmployeeId !== null ||
+                              generatingEmployeeId !== null
+                            }
+                            onClick={() => {
+                              void sendSignatures(employee);
+                            }}
+                            title={
+                              !employee.email
+                                ? "Add an email address to enable sending."
+                                : !emailDeliveryEnabled
+                                  ? "Email delivery is not configured."
+                                  : undefined
+                            }
+                          >
+                            {sendingEmployeeId === employee.id ? (
+                              <>
+                                <LoaderCircle className="size-3.5 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <Mail className="size-3.5" />
+                                Email signatures
                               </>
                             )}
                           </Button>
@@ -394,6 +490,25 @@ export default function EmployeeTable({ employees }: EmployeeTableProps) {
                         </div>
                         {signatureErrors[employee.id] ? (
                           <p className="text-destructive text-xs">{signatureErrors[employee.id]}</p>
+                        ) : null}
+                        {!employee.email ? (
+                          <p className="text-muted-foreground text-xs">Email is optional; add one if you want to send the files.</p>
+                        ) : !emailDeliveryEnabled ? (
+                          <p className="text-muted-foreground text-xs">
+                            Email relay is not configured. Use Generate signatures to download files.
+                          </p>
+                        ) : null}
+                        {deliveryMessages[employee.id] ? (
+                          <p
+                            className={
+                              deliveryMessages[employee.id].kind === "error"
+                                ? "text-destructive text-xs"
+                                : "text-muted-foreground text-xs"
+                            }
+                            role={deliveryMessages[employee.id].kind === "error" ? "alert" : "status"}
+                          >
+                            {deliveryMessages[employee.id].text}
+                          </p>
                         ) : null}
                       </div>
                     )}

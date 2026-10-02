@@ -202,36 +202,60 @@ Readiness: [specific blockers or "ready to proceed"]
 Do not claim setup is complete if there are remaining auth, access, API, binding, or write-permission failures.
 <!-- BEGIN @przeprogramowani/10x-cli -->
 
-## 10xDevs AI Toolkit - Module 2, Lesson 5 (10xDevs 4.0 UI)
+## 10xDevs AI Toolkit - Module 3, Lesson 3 (10xDevs 4.0 Hooks)
 
-Treat a visual change as a **10x change with a design-system contract**, not a "make it pretty" chat:
+Treat a hook as a **quality gate the harness runs for the agent**, not a script you hope the agent notices. Hooks run outside the model, so they survive context compaction and forgotten instructions — but only a hook whose signal actually reaches the agent closes the loop:
 
 ```
-/10x-new -> audit+reference research -> plan (tokens then one view) -> implement -> screenshot gate -> /10x-impl-review
+test-plan.md "Quality Gates" -> pick the moment per gate -> /10x-configure-hook -> prove with sample JSON -> watch the agent fix a deliberate error
 ```
 
 ### Task Router - Where to start
 
 | Skill | Use it when |
 | --- | --- |
-| `/10x-ui` | A view that already renders and needs auditing and improving: theme, restyle, "nicer UI", tokens, visual pass — on the course app or any other stack. Not for building the view in the first place. |
-| `/10x-research` | Locate this repo's value source and shared components, map which views read them, and pick a named motif — not a moodboard. Output is a list of charges (file, line, user impact). |
-| `/10x-plan` / `/10x-implement` | Same chain as earlier M2 lessons; payload is UI. |
-| `/10x-impl-review` | Before merge; do not skip visual findings as cosmetic. |
+| `/10x-configure-hook` | Turning the gates from `context/foundation/test-plan.md` into agent hooks, fixing hooks that fire but the agent never reacts to, or auditing an existing hook config. It detects the harness from the repo and carries dated per-harness references. |
+| `/10x-test-plan --status` | Read the current gates and rollout state. Changing which gates exist belongs to Lesson 1, not here. |
+| `/10x-new` -> `/10x-research` -> `/10x-plan` -> `/10x-implement` | A hook surfaced a failure the agent cannot fix with a trivial correction (wrong business logic, flaky integration). Open a change instead of looping the hook. |
+
+### Hook lifecycle
+
+1. **Trigger** — an event in the harness: a tool finished editing a file, the agent is about to end its turn.
+2. **Matcher** — narrows which tool calls or files the hook reacts to. Not every harness honours matchers the same way.
+3. **Handler** — usually a shell command or script that reads the event payload as JSON on stdin.
+4. **Signal** — what the hook returns. The exit code, stderr, stdout and JSON fields mean different things in different harnesses, and only one channel per event actually reaches the agent. **The signal channel differs per harness — check the skill's references before writing or reviewing a hook.**
+
+A hook that runs but sends its message down the wrong channel is the most common failure: the user sees "hook error", the agent sees nothing and keeps going.
+
+### Moments and layers
+
+The slower the check, the rarer the moment:
+
+| Moment | Typical checks | Reaches the agent? |
+| --- | --- | --- |
+| Per edit | Lint/format of **the edited file only**; related tests if they are fast | Yes, mid-work |
+| End of turn (Stop or its equivalent) | Lint + tests for every file changed this turn, whole-project typecheck | Yes, before the agent hands back |
+| Pre-commit (git) | Lint + tests on staged files; catches edits made without the agent | No — blocks the commit |
+| Pre-push (git) | Heavier suites, e2e that run locally | No — blocks the push |
+| CI | Integration, shared state, infrastructure you do not have locally | No — PR feedback |
+
+Local layers do not replace CI; each one saves a CI round-trip. Start with one per-edit lint hook and one end-of-turn typecheck, then add layers when you see what escapes.
 
 ### Contract
 
-- Two halves, whatever the stack: semantic tokens in one source, and importable components living in the repo. Tailwind v4 `@theme` + shadcn is how the course app realises them; read this repo's own realisation before proposing values.
-- Values taken from outside go into the repo with a line naming the source. Not into the chat history.
-- One view + global tokens. Not a whole-MVP rebrand. Not worktrees/`/goal`.
-- Three charge categories: missing tokens, missing shared component, accidental architecture.
-- Visual gate: a kitchen sink rendering every state, screenshotted; wire it into a screenshot test only if the repo already has one. Do not blind-update baselines.
-- No design system in the repo? Proposing one is allowed — marked as adding a dependency, scoped to what the change needs, and always losing to a system that already exists.
-- Models: route by phase, not vendor. Strongest model you have for audit, plan and review; a cheaper working tier for implementing charges in the loop; escalate only when the same charge survives two rounds. Any vision-capable model works, and no single model — Fable 5.1 included — is a requirement.
+- Read the gates from the "Quality Gates" section of `context/foundation/test-plan.md` (by title, not section number). A gate the plan explicitly defers stays deferred unless the user overrides it — quote the deferral when you ask.
+- Per-edit hooks check only the file that was edited. Never run `--fix` or a linter over the whole project on every edit.
+- End-of-turn hooks that can send the agent back must stop after one retry (the harness's "already continued" flag or equivalent), so an unfixable error does not loop.
+- Per-edit hooks only see the harness's edit tools; a file rewritten through a shell command skips them. The end-of-turn hook re-checks every file changed this turn (`git diff`), so it is the net for those edits.
+- Timeouts are usually in **seconds**. Check the unit before copying a number.
+- Prove every hook before trusting it: run the script with a sample payload on a deliberately broken file and on a clean one, then revert the error.
+- Never overwrite existing hook config silently. Audit it, name the defects, merge, and show the diff.
 
 ### Lesson boundaries
 
-- Do not reteach Exa/Context7, worktrees, or screenshot testing as a testing course.
-- Do not initialize a second design system on a repo that already has one — `shadcn init` on the course starter included.
+- Do not change the risk strategy or the gate definitions — that is Lesson 1 (`/10x-test-plan`).
+- Do not write new tests here — hooks only run the tests Lesson 2 produced.
+- Do not write E2E scenarios or browser verification — that is Lesson 4.
+- Do not author CI pipelines or install git-hook managers unasked; recommend pre-commit/pre-push gates, let the user decide.
 
 <!-- END @przeprogramowani/10x-cli -->

@@ -191,22 +191,22 @@ No database migration or employee schema change is required. Generated files and
 
 #### Automated
 
-- [x] 2.1 `npx astro check` and `npm run lint` pass
-- [x] 2.2 `npm run build` succeeds
+- [x] 2.1 `npx astro check` and `npm run lint` pass — a0a20f9
+- [x] 2.2 `npm run build` succeeds — a0a20f9
 
 #### Manual
 
-- [x] 2.3 Row action downloads both correctly named artifacts and handles pending, failure, and retry states
+- [x] 2.3 Row action downloads both correctly named artifacts and handles pending, failure, and retry states — a0a20f9
 
 ### Phase 3: Verify real-client behavior and close the slice
 
 #### Automated
 
-- [ ] 3.1 Full `npm run smoke` passes
-- [ ] 3.2 `npx astro check`, `npm run lint`, and `npm run build` pass
+- [x] 3.1 Full `npm run smoke` passes
+- [x] 3.2 `npx astro check`, `npm run lint`, and `npm run build` pass
 
 #### Manual
 
-- [ ] 3.3 New Outlook saves and renders the generated signature with logo in new and reply messages
-- [ ] 3.4 Thunderbird installer configures only the selected account, preserves cancellation/failure state, and creates a restorable backup
-- [ ] 3.5 Both clients render supported logo types without external URLs, and no-logo output remains readable
+- [x] 3.3 New Outlook saves and renders the generated signature with logo in new and reply messages
+- [x] 3.4 Thunderbird installer configures only the selected account, preserves cancellation/failure state, and creates a restorable backup
+- [x] 3.5 Both clients render supported logo types without external URLs, and no-logo output remains readable
