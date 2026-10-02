@@ -28,10 +28,14 @@ async function getOwnDepartmentId(supabase: SupabaseClient): Promise<string> {
     .from("profiles")
     .select("department_id")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (profileError) {
     throw new Error(profileError.message);
+  }
+
+  if (!profile) {
+    throw new Error("Your account is missing a department profile. Contact an administrator to restore access.");
   }
 
   return profile.department_id as string;
@@ -63,10 +67,14 @@ export async function getDepartmentLogoUrl(supabase: SupabaseClient): Promise<st
     .from("profiles")
     .select("department_id, departments!inner(logo_url)")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (profileError) {
     throw new Error(profileError.message);
+  }
+
+  if (!profile) {
+    throw new Error("Your account is missing a department profile. Contact an administrator to restore access.");
   }
 
   const logoKey = getLogoKey(profile);
@@ -102,10 +110,14 @@ export async function getDepartmentLogoAsset(supabase: SupabaseClient): Promise<
     .from("profiles")
     .select("department_id, departments!inner(logo_url)")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (profileError) {
     throw new Error(profileError.message);
+  }
+
+  if (!profile) {
+    throw new Error("Your account is missing a department profile. Contact an administrator to restore access.");
   }
 
   const logoKey = getLogoKey(profile);
