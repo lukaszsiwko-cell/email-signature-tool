@@ -18,4 +18,5 @@
       "id": "0efbfb6c6b6f496b9655ede62b043129",
     },
   ],
+  "send_email": [{ "name": "EMAIL" }],
 }

@@ -20,12 +20,14 @@ function phoneLooksValid(value: string): boolean {
 interface FormErrors {
   firstName?: string;
   lastName?: string;
+  email?: string;
   position?: string;
 }
 
 export default function AddEmployeeForm() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [position, setPosition] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -36,6 +38,7 @@ export default function AddEmployeeForm() {
     const next: FormErrors = {};
     if (!firstName.trim()) next.firstName = "First name is required";
     if (!lastName.trim()) next.lastName = "Last name is required";
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = "Enter a valid email address";
     if (!position.trim()) next.position = "Position is required";
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -56,7 +59,7 @@ export default function AddEmployeeForm() {
       const response = await fetch("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, position, phone }),
+        body: JSON.stringify({ firstName, lastName, email: email.trim() || undefined, position, phone }),
       });
 
       if (!response.ok) {
@@ -126,6 +129,28 @@ export default function AddEmployeeForm() {
             </p>
           ) : null}
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="email" className="text-muted-foreground mb-1 block text-sm">
+          Email (optional)
+        </Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            clearError("email");
+          }}
+          aria-invalid={Boolean(errors.email)}
+        />
+        {errors.email ? (
+          <p className="text-destructive mt-1 flex items-center gap-1 text-xs">
+            <CircleAlert className="size-3" />
+            {errors.email}
+          </p>
+        ) : null}
       </div>
 
       <div>

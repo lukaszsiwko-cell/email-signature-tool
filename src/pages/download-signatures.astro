@@ -1,0 +1,10 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import SignatureDownload from "@/components/signatures/SignatureDownload";
+---
+
+<Layout title="Download email signatures">
+  <div class="bg-cosmic min-h-screen">
+    <SignatureDownload client:load />
+  </div>
+</Layout>

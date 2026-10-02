@@ -1,9 +1,9 @@
 ---
 change_id: generate-signature-scripts
 title: Generate signature artifacts for New Outlook and Thunderbird
-status: implementing
+status: implemented
 created: 2026-10-01
-updated: 2026-10-01
+updated: 2026-10-02
 archived_at: null
 ---
 

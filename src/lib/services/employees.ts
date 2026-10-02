@@ -1,5 +1,5 @@
 import type { createClient } from "@/lib/supabase";
-import type { EmployeeDTO, CreateEmployeeInput } from "@/types";
+import type { EmployeeDTO, CreateEmployeeInput, UpdateEmployeeInput } from "@/types";
 
 type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
 
@@ -7,6 +7,7 @@ interface EmployeeRow {
   id: string;
   first_name: string;
   last_name: string;
+  email: string | null;
   position: string;
   phone: string;
   created_at: string;
@@ -17,6 +18,7 @@ function toDTO(row: EmployeeRow): EmployeeDTO {
     id: row.id,
     firstName: row.first_name,
     lastName: row.last_name,
+    email: row.email,
     position: row.position,
     phone: row.phone,
     createdAt: row.created_at,
@@ -30,7 +32,7 @@ function toDTO(row: EmployeeRow): EmployeeDTO {
 export async function listEmployees(supabase: SupabaseClient): Promise<EmployeeDTO[]> {
   const { data, error } = await supabase
     .from("employees")
-    .select("id, first_name, last_name, position, phone, created_at")
+    .select("id, first_name, last_name, email, position, phone, created_at")
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true });
 
@@ -45,7 +47,7 @@ export async function listEmployees(supabase: SupabaseClient): Promise<EmployeeD
 export async function getEmployeeById(supabase: SupabaseClient, id: string): Promise<EmployeeDTO | null> {
   const { data, error } = await supabase
     .from("employees")
-    .select("id, first_name, last_name, position, phone, created_at")
+    .select("id, first_name, last_name, email, position, phone, created_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -87,10 +89,11 @@ export async function createEmployee(supabase: SupabaseClient, input: CreateEmpl
       department_id: profile.department_id,
       first_name: input.firstName,
       last_name: input.lastName,
+      email: input.email?.trim() || null,
       position: input.position,
       phone: input.phone,
     })
-    .select("id, first_name, last_name, position, phone, created_at")
+    .select("id, first_name, last_name, email, position, phone, created_at")
     .single();
 
   if (error) {
@@ -110,18 +113,19 @@ export async function createEmployee(supabase: SupabaseClient, input: CreateEmpl
 export async function updateEmployee(
   supabase: SupabaseClient,
   id: string,
-  input: CreateEmployeeInput,
+  input: UpdateEmployeeInput,
 ): Promise<EmployeeDTO | null> {
   const { data, error } = await supabase
     .from("employees")
     .update({
       first_name: input.firstName,
       last_name: input.lastName,
+      ...(input.email !== undefined ? { email: input.email?.trim() || null } : {}),
       position: input.position,
       phone: input.phone,
     })
     .eq("id", id)
-    .select("id, first_name, last_name, position, phone, created_at")
+    .select("id, first_name, last_name, email, position, phone, created_at")
     .maybeSingle();
 
   if (error) {

@@ -8,6 +8,10 @@ export const prerender = false;
 const createEmployeeSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
+  email: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.string().trim().max(254).pipe(z.email("Enter a valid email address")).optional(),
+  ),
   position: z.string().trim().min(1, "Position is required"),
   // Optional and permissive per the PRD's warn-don't-block rule — shape is
   // only validated on the client (as a non-blocking hint), never enforced here.

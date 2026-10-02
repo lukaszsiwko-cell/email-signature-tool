@@ -5,6 +5,7 @@ export interface EmployeeDTO {
   id: string;
   firstName: string;
   lastName: string;
+  email: string | null;
   position: string;
   phone: string;
   createdAt: string;
@@ -13,11 +14,17 @@ export interface EmployeeDTO {
 export interface CreateEmployeeInput {
   firstName: string;
   lastName: string;
+  email?: string;
   position: string;
   phone: string;
+}
+
+export interface UpdateEmployeeInput extends Omit<CreateEmployeeInput, "email"> {
+  email?: string | null;
 }
 
 export interface SignatureArtifactsDTO {
   outlookHtml: string;
   thunderbirdInstaller: string;
+  thunderbirdLauncher: string;
 }
