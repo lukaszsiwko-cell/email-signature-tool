@@ -413,24 +413,24 @@ changes.
 
 #### Automated
 
-- [x] 1.1 npm install completes with Vitest added to devDependencies
-- [x] 1.2 npm run test:unit passes (placeholder test green, including the @/* alias import)
-- [x] 1.3 npm run lint passes (no new lint errors from the added config/script files)
+- [x] 1.1 npm install completes with Vitest added to devDependencies — 89eb6db
+- [x] 1.2 npm run test:unit passes (placeholder test green, including the @/* alias import) — 89eb6db
+- [x] 1.3 npm run lint passes (no new lint errors from the added config/script files) — 89eb6db
 
 #### Manual
 
-- [x] 1.4 Running npm run test:integration without BASE_URL set fails fast with a clear, readable error
+- [x] 1.4 Running npm run test:integration without BASE_URL set fails fast with a clear, readable error — 89eb6db
 
 ### Phase 2: Risk #3 unit tests — script-injection escaping
 
 #### Automated
 
-- [ ] 2.1 npm run test:unit passes, including all fixture/field combinations from the named set across all four employee fields
-- [ ] 2.2 npm run lint passes
+- [x] 2.1 npm run test:unit passes, including all fixture/field combinations from the named set across all four employee fields
+- [x] 2.2 npm run lint passes
 
 #### Manual
 
-- [ ] 2.3 Temporarily remove one escapeHtml() call and confirm the new unit test fails with a clear assertion message, then revert
+- [x] 2.3 Temporarily remove one escapeHtml() call and confirm the new unit test fails with a clear assertion message, then revert
 
 ### Phase 3: Risk #1 integration tests — cross-department IDOR
 
