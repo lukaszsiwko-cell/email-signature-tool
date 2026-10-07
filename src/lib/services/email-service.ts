@@ -15,7 +15,7 @@ export async function sendSignatureDeliveryEmail(to: string, token: string): Pro
   const smtpAppPassword = String(GMAIL_SMTP_APP_PASSWORD);
   const transport = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
+    port: 587,
     secure: true,
     auth: {
       user: smtpUsername,

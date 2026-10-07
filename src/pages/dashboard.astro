@@ -6,26 +6,183 @@ const { user } = Astro.locals;
 ---
 
 <Layout title="Panel główny">
-  <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
-    <div class="w-full max-w-sm">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto max-w-5xl">
       <Topbar />
-      <div class="rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl">
-        <h1 class="mb-4 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent">
-          Panel główny
-        </h1>
-        <p class="text-blue-100/80">
-          Welcome, <span class="font-semibold text-white">{user?.email}</span>
-        </p>
-        <p class="mt-2 text-sm text-blue-100/50">This page is only for authenticated users.</p>
-        <form method="POST" action="/api/auth/signout" class="mt-6">
-          <button
-            type="submit"
-            class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm transition-colors hover:bg-white/20"
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
+      <main class="grid items-center gap-5 md:grid-cols-2">
+        <section class="rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl sm:p-10 md:text-left">
+          <p class="mb-3 text-sm font-medium uppercase tracking-[0.18em] text-blue-200/75">Generator podpisów e-mail</p>
+          <h1 class="mb-4 pb-1 text-3xl leading-[1.35] font-bold text-blue-100 sm:text-4xl">
+            Panel główny
+          </h1>
+          <p class="text-blue-100/80">
+            Witaj, <span class="font-semibold text-white">{user?.email}</span>
+          </p>
+          <p class="mt-2 text-sm text-blue-100/60">Jesteś zalogowany(-a) do swojego konta.</p>
+          <form method="POST" action="/api/auth/signout" class="mt-6">
+            <button
+              type="submit"
+              class="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-200"
+            >
+              Wyloguj się
+            </button>
+          </form>
+        </section>
+
+        <div class="mail-illustration" role="img" aria-label="Ilustracja koperty z gotowym podpisem e-mail">
+          <div class="mail-orbit"></div>
+          <div class="mail-spark mail-spark-one"></div>
+          <div class="mail-spark mail-spark-two"></div>
+          <div class="mail-envelope">
+            <div class="mail-envelope-back"></div>
+            <div class="signature-sheet">
+              <div class="signature-avatar"></div>
+              <div class="signature-copy">
+                <span class="signature-line signature-name"></span>
+                <span class="signature-line signature-role"></span>
+                <span class="signature-line signature-contact"></span>
+              </div>
+              <span class="signature-rule"></span>
+              <span class="signature-line signature-footer"></span>
+            </div>
+            <div class="mail-envelope-front"></div>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 </Layout>
+
+<style>
+  .mail-illustration {
+    aspect-ratio: 1.35;
+    display: grid;
+    min-height: 250px;
+    overflow: hidden;
+    place-items: center;
+    position: relative;
+  }
+
+  .mail-orbit {
+    aspect-ratio: 1;
+    border: 1px solid rgb(191 219 254 / 20%);
+    border-radius: 50%;
+    position: absolute;
+    width: min(78%, 330px);
+  }
+
+  .mail-envelope {
+    aspect-ratio: 1.65;
+    filter: drop-shadow(0 24px 30px rgb(0 0 0 / 30%));
+    position: relative;
+    transform: rotate(-6deg);
+    width: min(74%, 310px);
+  }
+
+  .mail-envelope-back,
+  .mail-envelope-front {
+    border-radius: 12px;
+    inset: 25% 0 0;
+    position: absolute;
+  }
+
+  .mail-envelope-back {
+    background: linear-gradient(145deg, #526fba, #344c91);
+    clip-path: polygon(0 0, 50% 58%, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .signature-sheet {
+    background: linear-gradient(135deg, #fff 0%, #e6edff 100%);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgb(10 14 26 / 22%);
+    height: 72%;
+    left: 13%;
+    padding: 12% 10% 8%;
+    position: absolute;
+    top: 0;
+    transform: rotate(2deg);
+    width: 74%;
+  }
+
+  .signature-avatar {
+    background: linear-gradient(135deg, #53c9e8, #7c83e8);
+    border-radius: 50%;
+    float: left;
+    height: 24px;
+    margin-right: 10px;
+    width: 24px;
+  }
+
+  .signature-copy {
+    display: grid;
+    gap: 5px;
+    padding-top: 2px;
+  }
+
+  .signature-line {
+    background: #8090b6;
+    border-radius: 99px;
+    display: block;
+    height: 4px;
+  }
+
+  .signature-name {
+    background: #33436d;
+    width: 54%;
+  }
+
+  .signature-role {
+    width: 38%;
+  }
+
+  .signature-contact {
+    height: 3px;
+    width: 66%;
+  }
+
+  .signature-rule {
+    background: #c4cce0;
+    display: block;
+    height: 1px;
+    margin: 14px 0 9px;
+    width: 100%;
+  }
+
+  .signature-footer {
+    background: #66b9e7;
+    height: 4px;
+    width: 44%;
+  }
+
+  .mail-envelope-front {
+    background: linear-gradient(155deg, #7894de, #536fba);
+    clip-path: polygon(0 0, 50% 61%, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .mail-spark {
+    background: #c5d4ff;
+    border-radius: 50%;
+    box-shadow: 0 0 16px 4px rgb(137 164 255 / 35%);
+    height: 7px;
+    position: absolute;
+    width: 7px;
+  }
+
+  .mail-spark-one {
+    right: 17%;
+    top: 24%;
+  }
+
+  .mail-spark-two {
+    bottom: 21%;
+    height: 5px;
+    left: 17%;
+    width: 5px;
+  }
+
+  @media (max-width: 767px) {
+    .mail-illustration {
+      min-height: 210px;
+    }
+  }
+</style>

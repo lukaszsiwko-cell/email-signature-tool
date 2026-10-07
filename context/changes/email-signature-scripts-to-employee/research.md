@@ -7,7 +7,7 @@ repository: email-signature-tool
 topic: "Research S-05 email delivery for generated employee signatures"
 tags: [research, email, signatures, cloudflare-workers, supabase]
 status: partial
-last_updated: 2026-10-02
+last_updated: 2026-10-07
 last_updated_by: GitHub Copilot
 ---
 
@@ -21,15 +21,15 @@ last_updated_by: GitHub Copilot
 
 ## Research Question
 
-What changes are required to email both generated signature scripts to an employee through an approved company mail relay, with a 24-hour, single-use download link, while preserving department isolation and the employee-data privacy guardrail?
+What changes are required to email a one-time link to generated employee signature files through Gmail SMTP from Cloudflare Workers, while preserving department isolation and the employee-data privacy guardrail?
 
 ## Summary
 
 The PRD requires the help desk user to request generation and email both scripts with instructions and a download link. In the inspected employee model and create form, no employee email field exists (`src/types.ts`, `src/lib/services/employees.ts`, `src/components/employees/AddEmployeeForm.tsx`). The signature endpoint currently returns generated artifacts to an authenticated caller (`src/pages/api/employees/[id]/signatures.ts`).
 
-No email provider or email-specific server configuration was found in the inspected package, Astro environment schema, Worker configuration, or source tree. The app runs as an Astro server on Cloudflare Workers (`astro.config.mjs`, `wrangler.jsonc`). The user selected a company-managed HTTPS relay and a 24-hour single-use link, then corrected the recipient decision: employee email and email delivery are optional. When configured, the relay contract is `POST /send` with `{ to, subject, text }` and a server-side bearer token.
+At the time of the original research (2026-10-02), no email provider or mail-specific configuration was present, and a company-managed HTTPS relay was selected. On 2026-10-07, the user changed the provider decision to Gmail SMTP. The current implementation uses Nodemailer with implicit TLS on `smtp.gmail.com:465`, configured with server-only Astro environment variables. Employee email and delivery remain optional; manual downloads do not depend on email configuration.
 
-The research remains partial because no relay endpoint or network route is configured in the repository; delivery cannot be tested against the company's mail system yet. The implementation can use a mock relay in automated tests and document server-side configuration, but deployment verification will need a reachable approved endpoint.
+Cloudflare Workers supports outbound TCP/TLS through Node compatibility, while blocking outbound SMTP on port 25; this integration uses port 465. Automated tests mock the Nodemailer transport. Actual SMTP authentication and message delivery from the Cloudflare Worker runtime remain to be verified with rotated Gmail credentials and a test mailbox.
 
 ## Detailed Findings
 
@@ -41,14 +41,15 @@ The research remains partial because no relay endpoint or network route is confi
 ## Decision Update
 
 - On 2026-10-02, the user corrected the earlier required-recipient decision: employee email is optional, and relay configuration is optional. Manual artifact downloads remain available when either is missing; the send action is disabled until both are present.
+- On 2026-10-07, the user replaced the company-relay assumption with Gmail SMTP over implicit TLS on port 465, using the existing Gmail account configuration. This is a provider decision, not a Cloudflare HTTPS limitation: Workers can make outbound HTTPS requests, but no company relay endpoint is available for this project.
 - The existing employees table has department-scoped RLS; any new delivery record must preserve the same department boundary (`supabase/migrations/20260922193159_department_scoped_data_foundation.sql`).
 
 ### Signature generation and runtime
 
 - The authenticated signature route loads the caller-visible employee and department logo, then returns Outlook HTML and a Thunderbird installer (`src/pages/api/employees/[id]/signatures.ts`, `src/lib/services/signatures.ts`).
 - The existing API response uses `Cache-Control: no-store`; this is appropriate for generated employee data (`src/pages/api/employees/[id]/signatures.ts`).
-- The app uses the Cloudflare adapter and declares only Supabase server environment fields in Astro config; the Worker has no mail binding or mail-specific configuration in the inspected files (`astro.config.mjs`, `wrangler.jsonc`).
-- A company HTTPS relay is the selected boundary. The app-side adapter contract is `POST /send` with `{ to, subject, text }`, authenticated by a bearer token kept in server configuration. Actual endpoint reachability, sender identity, and credential provisioning remain deployment prerequisites.
+- The app uses the Cloudflare adapter with `nodejs_compat`; outbound TCP/TLS is supported through the Node compatibility APIs. Cloudflare blocks SMTP port 25, not the configured implicit-TLS port 465. Live compatibility and authentication still require a Worker-runtime test (`astro.config.mjs`, `wrangler.jsonc`).
+- The app-side adapter uses Gmail SMTP at `smtp.gmail.com:465`. `GMAIL_SMTP_USERNAME`, `GMAIL_SMTP_APP_PASSWORD`, and `EMAIL_FROM` are server-only settings. Gmail receives the one-time link in the message body; generated files are not sent as attachments.
 
 ### One-time delivery link
 
@@ -74,7 +75,7 @@ The research remains partial because no relay endpoint or network route is confi
 
 ## Architecture Insights
 
-- Keep mail credentials server-only and send through the company relay; do not introduce a third-party mail provider without changing the privacy decision.
+- Keep Gmail credentials server-only. The approved decision now permits Gmail to receive the recipient, sender, subject, and one-time link; never attach generated artifacts or log credentials, message bodies, or recipient addresses.
 - A single-use link must redeem all files as one delivery action, or the employee could consume the token on the first file and lose access to the second. The landing-page and response shape should make the set of generated artifacts available after one explicit redemption.
 - A GET-only email-link landing page should not redeem the token; scanners commonly fetch links automatically. Redeem only after the recipient explicitly requests the files.
 
@@ -89,6 +90,6 @@ Not applicable; no S-05 research artifact existed before this change.
 
 ## Open Questions
 
-- What approved HTTPS relay endpoint will be configured, and is it reachable from the deployed Cloudflare Worker?
-- Which sender address/name is allowed by the relay?
+- Does the Nodemailer implicit-TLS transport authenticate and deliver successfully from the deployed Cloudflare Worker runtime?
+- Is the configured sender address accepted by the Gmail account or one of its sender aliases?
 - What employee-facing instruction text and fallback should be used when delivery fails? No delivery tracking is required by the PRD, but the operator needs an immediate error or success result.
