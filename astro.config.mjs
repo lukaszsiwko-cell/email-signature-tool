@@ -14,6 +14,11 @@ export default defineConfig({
     optimizeDeps: {
       include: ["lucide-react"],
     },
+    ssr: {
+      optimizeDeps: {
+        exclude: ["@radix-ui/react-label"],
+      },
+    },
     plugins: [tailwindcss()],
   },
   adapter: cloudflare(),

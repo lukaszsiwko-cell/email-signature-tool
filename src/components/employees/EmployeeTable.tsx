@@ -66,6 +66,25 @@ interface DeliveryMessage {
   text: string;
 }
 
+function getDeliveryErrorMessage(code?: string): string {
+  switch (code) {
+    case "E_SENDER_NOT_VERIFIED":
+      return "Adres nadawcy nie jest zweryfikowany w Cloudflare Email Service.";
+    case "E_SENDER_DOMAIN_NOT_AVAILABLE":
+      return "Domena nadawcy nie jest skonfigurowana w Cloudflare Email Service.";
+    case "E_RECIPIENT_NOT_ALLOWED":
+      return "Ten odbiorca nie jest dozwolony w konfiguracji Cloudflare Email Service.";
+    case "E_RECIPIENT_SUPPRESSED":
+      return "Wysyłka na ten adres jest zablokowana przez Cloudflare Email Service.";
+    case "E_RATE_LIMIT_EXCEEDED":
+      return "Przekroczono limit wysyłki. Spróbuj ponownie za chwilę.";
+    case "E_DAILY_LIMIT_EXCEEDED":
+      return "Przekroczono dzienny limit wysyłki Cloudflare Email Service.";
+    default:
+      return "Nie udało się wysłać podpisu e-mailem. Sprawdź konfigurację wysyłki i spróbuj ponownie.";
+  }
+}
+
 export default function EmployeeTable({ employees, emailDeliveryEnabled }: EmployeeTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>({ firstName: "", lastName: "", email: "", position: "", phone: "" });
@@ -105,9 +124,9 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
 
   function validateDraft(): boolean {
     const next: DraftErrors = {};
-    if (!draft.firstName.trim()) next.firstName = "First name is required";
-    if (!draft.lastName.trim()) next.lastName = "Last name is required";
-    if (!draft.position.trim()) next.position = "Position is required";
+    if (!draft.firstName.trim()) next.firstName = "Podaj imię";
+    if (!draft.lastName.trim()) next.lastName = "Podaj nazwisko";
+    if (!draft.position.trim()) next.position = "Podaj stanowisko";
     setDraftErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -125,8 +144,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
       });
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setRowError(body?.error ?? "Failed to save changes");
+        setRowError("Nie udało się zapisać zmian. Sprawdź dane i spróbuj ponownie.");
         setIsSaving(false);
         return;
       }
@@ -134,7 +152,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
       // Full-page navigation so the server-rendered list picks up the change.
       window.location.assign("/employees");
     } catch {
-      setRowError("Failed to save changes");
+      setRowError("Nie udało się zapisać zmian. Spróbuj ponownie.");
       setIsSaving(false);
     }
   }
@@ -157,15 +175,14 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
       const response = await fetch(`/api/employees/${id}`, { method: "DELETE" });
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setRowError(body?.error ?? "Failed to delete employee");
+        setRowError("Nie udało się usunąć pracownika. Spróbuj ponownie.");
         setIsDeleting(false);
         return;
       }
 
       window.location.assign("/employees");
     } catch {
-      setRowError("Failed to delete employee");
+      setRowError("Nie udało się usunąć pracownika. Spróbuj ponownie.");
       setIsDeleting(false);
     }
   }
@@ -185,7 +202,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
       if (!response.ok) {
         setSignatureErrors((current) => ({
           ...current,
-          [employee.id]: typeof body?.error === "string" ? body.error : "Failed to generate signatures",
+          [employee.id]: "Nie udało się wygenerować podpisów. Spróbuj ponownie.",
         }));
         return;
       }
@@ -195,7 +212,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
         typeof body.thunderbirdInstaller !== "string" ||
         typeof body.thunderbirdLauncher !== "string"
       ) {
-        setSignatureErrors((current) => ({ ...current, [employee.id]: "Invalid signature response" }));
+        setSignatureErrors((current) => ({ ...current, [employee.id]: "Nie udało się przygotować plików podpisu." }));
         return;
       }
 
@@ -215,7 +232,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
         `${filenameBase}-thunderbird-installer.cmd`,
       );
     } catch {
-      setSignatureErrors((current) => ({ ...current, [employee.id]: "Failed to generate signatures" }));
+      setSignatureErrors((current) => ({ ...current, [employee.id]: "Nie udało się wygenerować podpisów. Spróbuj ponownie." }));
     } finally {
       setGeneratingEmployeeId(null);
     }
@@ -228,23 +245,23 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
     setDeliveryMessages((current) => Object.fromEntries(Object.entries(current).filter(([id]) => id !== employee.id)));
     try {
       const response = await fetch(`/api/employees/${employee.id}/send-signatures`, { method: "POST" });
-      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+      const body = (await response.json().catch(() => null)) as { code?: string } | null;
       if (!response.ok) {
         setDeliveryMessages((current) => ({
           ...current,
-          [employee.id]: { kind: "error", text: body?.error ?? "Failed to send signature email" },
+          [employee.id]: { kind: "error", text: getDeliveryErrorMessage(body?.code) },
         }));
         return;
       }
 
       setDeliveryMessages((current) => ({
         ...current,
-        [employee.id]: { kind: "success", text: "Signature files sent." },
+        [employee.id]: { kind: "success", text: "Pliki z podpisami zostały wysłane." },
       }));
     } catch {
       setDeliveryMessages((current) => ({
         ...current,
-        [employee.id]: { kind: "error", text: "Failed to send signature email" },
+        [employee.id]: { kind: "error", text: "Nie udało się wysłać podpisu e-mailem. Spróbuj ponownie." },
       }));
     } finally {
       setSendingEmployeeId(null);
@@ -255,7 +272,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
     editingId && draft.phone.trim().length > 0 && !phoneLooksValid(draft.phone) ? (
       <p className="mt-1 flex items-center gap-1 text-xs text-yellow-300">
         <AlertTriangle className="size-3" />
-        This doesn&apos;t look like a valid phone number (9 digits), but you can still save.
+        Numer telefonu może być nieprawidłowy (powinien mieć 9 cyfr), ale możesz mimo to zapisać zmiany.
       </p>
     ) : undefined;
 
@@ -263,12 +280,12 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
     <Table>
       <TableHeader>
         <TableRow className="border-border hover:bg-transparent">
-          <TableHead className="text-muted-foreground">First name</TableHead>
-          <TableHead className="text-muted-foreground">Last name</TableHead>
-          <TableHead className="text-muted-foreground">Email</TableHead>
-          <TableHead className="text-muted-foreground">Position</TableHead>
-          <TableHead className="text-muted-foreground">Phone</TableHead>
-          <TableHead className="text-muted-foreground">Actions</TableHead>
+          <TableHead className="text-muted-foreground">Imię</TableHead>
+          <TableHead className="text-muted-foreground">Nazwisko</TableHead>
+          <TableHead className="text-muted-foreground">E-mail</TableHead>
+          <TableHead className="text-muted-foreground">Stanowisko</TableHead>
+          <TableHead className="text-muted-foreground">Telefon</TableHead>
+          <TableHead className="text-muted-foreground">Akcje</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -322,7 +339,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, email: e.target.value }));
                       }}
-                      aria-label="Employee email"
+                      aria-label="E-mail pracownika"
                     />
                   </TableCell>
                   <TableCell>
@@ -363,10 +380,10 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             void saveEdit(employee.id);
                           }}
                         >
-                          {isSaving ? "Saving..." : "Save"}
+                          {isSaving ? "Zapisywanie..." : "Zapisz"}
                         </Button>
                         <Button type="button" size="sm" variant="outline" disabled={isSaving} onClick={cancelEdit}>
-                          Cancel
+                          Anuluj
                         </Button>
                       </div>
                       {rowError ? <p className="text-destructive text-xs">{rowError}</p> : null}
@@ -384,7 +401,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                     {isConfirmingDelete ? (
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground text-xs">Are you sure?</span>
+                          <span className="text-muted-foreground text-xs">Czy na pewno usunąć pracownika?</span>
                           <Button
                             type="button"
                             size="sm"
@@ -394,7 +411,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                               void confirmDelete(employee.id);
                             }}
                           >
-                            {isDeleting ? "Deleting..." : "Yes"}
+                            {isDeleting ? "Usuwanie..." : "Tak, usuń"}
                           </Button>
                           <Button
                             type="button"
@@ -403,7 +420,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             disabled={isDeleting}
                             onClick={cancelDeleteConfirm}
                           >
-                            No
+                            Anuluj
                           </Button>
                         </div>
                         {rowError ? <p className="text-destructive text-xs">{rowError}</p> : null}
@@ -423,12 +440,12 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             {generatingEmployeeId === employee.id ? (
                               <>
                                 <LoaderCircle className="size-3.5 animate-spin" />
-                                Generating...
+                                Generowanie...
                               </>
                             ) : (
                               <>
                                 <Download className="size-3.5" />
-                                Generate signatures
+                                Generuj podpisy
                               </>
                             )}
                           </Button>
@@ -447,21 +464,21 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             }}
                             title={
                               !employee.email
-                                ? "Add an email address to enable sending."
+                                ? "Dodaj adres e-mail, aby włączyć wysyłkę."
                                 : !emailDeliveryEnabled
-                                  ? "Email delivery is not configured."
+                                  ? "Wysyłka e-maili nie jest skonfigurowana."
                                   : undefined
                             }
                           >
                             {sendingEmployeeId === employee.id ? (
                               <>
                                 <LoaderCircle className="size-3.5 animate-spin" />
-                                Sending...
+                                Wysyłanie...
                               </>
                             ) : (
                               <>
                                 <Mail className="size-3.5" />
-                                Email signatures
+                                Wyślij podpisy
                               </>
                             )}
                           </Button>
@@ -474,7 +491,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             }}
                           >
                             <Pencil className="size-3.5" />
-                            Edit
+                            Edytuj
                           </Button>
                           <Button
                             type="button"
@@ -485,17 +502,19 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             }}
                           >
                             <Trash2 className="size-3.5" />
-                            Delete
+                            Usuń
                           </Button>
                         </div>
                         {signatureErrors[employee.id] ? (
                           <p className="text-destructive text-xs">{signatureErrors[employee.id]}</p>
                         ) : null}
                         {!employee.email ? (
-                          <p className="text-muted-foreground text-xs">Email is optional; add one if you want to send the files.</p>
+                          <p className="text-muted-foreground text-xs">
+                            E-mail jest opcjonalny. Dodaj go, jeśli chcesz wysłać pliki.
+                          </p>
                         ) : !emailDeliveryEnabled ? (
                           <p className="text-muted-foreground text-xs">
-                            Email relay is not configured. Use Generate signatures to download files.
+                            Wysyłka e-maili nie jest skonfigurowana. Użyj opcji „Generuj podpisy”, aby pobrać pliki.
                           </p>
                         ) : null}
                         {deliveryMessages[employee.id] ? (

@@ -2,20 +2,26 @@
 import Layout from "@/layouts/Layout.astro";
 import SignInForm from "@/components/auth/SignInForm";
 
-const error = Astro.url.searchParams.get("error");
+const errorCode = Astro.url.searchParams.get("error");
+const errorMessages: Record<string, string> = {
+  "Invalid login credentials": "Nieprawidłowy adres e-mail lub hasło.",
+  "Email not confirmed": "Potwierdź adres e-mail przed zalogowaniem.",
+  "Supabase is not configured": "Logowanie jest obecnie niedostępne. Spróbuj ponownie później.",
+};
+const error = errorCode ? (errorMessages[errorCode] ?? "Nie udało się zalogować. Spróbuj ponownie.") : null;
 ---
 
-<Layout title="Sign in">
+<Layout title="Logowanie">
   <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
     <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
       <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
-        Sign in
+        Zaloguj się
       </h1>
       <SignInForm serverError={error} client:load />
       <p class="mt-4 text-center text-sm text-blue-100/60">
-        Don't have an account?{" "}
+        Nie masz jeszcze konta?{" "}
         <a href="/auth/signup" class="text-primary hover:underline">
-          Sign up
+          Utwórz konto
         </a>
       </p>
     </div>

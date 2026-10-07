@@ -42,9 +42,14 @@ export const POST: APIRoute = async (context) => {
     const delivery = await createSignatureDelivery(supabase, employee);
     try {
       await sendSignatureDeliveryEmail(employee.email, delivery.token);
-    } catch {
+    } catch (error) {
       await revokeSignatureDelivery(supabase, delivery.token).catch(() => undefined);
-      return jsonResponse({ error: "Unable to send signature email" }, 502);
+      const code =
+        error instanceof Error && "code" in error && typeof error.code === "string" && /^E_[A-Z0-9_]+$/.test(error.code)
+          ? error.code
+          : "UNKNOWN";
+      console.error("Signature email send rejected", code);
+      return jsonResponse({ error: "Unable to send signature email", code }, 502);
     }
 
     return jsonResponse({ sent: true, expiresAt: delivery.expiresAt }, 202);

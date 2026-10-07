@@ -8,27 +8,27 @@ const { user } = Astro.locals;
       <span class="text-muted-foreground min-w-0 truncate">{user.email}</span>
       <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
         <a href="/dashboard" class="text-primary transition-colors hover:text-primary/70 hover:underline">
-          Dashboard
+          Panel główny
         </a>
         <a href="/employees" class="text-primary transition-colors hover:text-primary/70 hover:underline">
-          Employees
+          Pracownicy
         </a>
         <form method="POST" action="/api/auth/signout">
           <button type="submit" class="text-primary transition-colors hover:text-primary/70 hover:underline">
-            Sign out
+            Wyloguj się
           </button>
         </form>
       </div>
     </>
   ) : (
     <>
-      <span class="text-muted-foreground">Not signed in</span>
+      <span class="text-muted-foreground">Nie zalogowano</span>
       <div class="flex flex-wrap gap-x-3 gap-y-1">
         <a href="/auth/signin" class="text-primary transition-colors hover:text-primary/70 hover:underline">
-          Sign in
+          Zaloguj się
         </a>
         <a href="/auth/signup" class="text-primary transition-colors hover:text-primary/70 hover:underline">
-          Sign up
+          Utwórz konto
         </a>
       </div>
     </>

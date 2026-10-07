@@ -251,7 +251,9 @@ const steps = [
         await sendSignatureEmail(
           {
             send: async () => {
-              throw new Error("private provider diagnostic");
+              const error = new Error("private provider diagnostic");
+              error.code = "E_SENDER_NOT_VERIFIED";
+              throw error;
             },
           },
           {
@@ -263,7 +265,10 @@ const steps = [
         );
         return { status: 500, location: "", body: "provider failure was accepted" };
       } catch (error) {
-        const valid = error instanceof Error && error.message === "Cloudflare Email Service rejected the message";
+        const valid =
+          error instanceof Error &&
+          error.message === "Cloudflare Email Service rejected the message" &&
+          error.code === "E_SENDER_NOT_VERIFIED";
         return { status: valid ? 200 : 500, location: "", body: valid ? error.message : "unsafe network error" };
       }
     },
@@ -308,12 +313,12 @@ const steps = [
       const res = await request("/");
       const valid =
         res.status === 200 &&
-        res.body.includes("Signatures that feel like your team.") &&
-        res.body.includes("Signature preview") &&
+        res.body.includes("Podpisy, które pasują do Twojego zespołu.") &&
+        res.body.includes("Podgląd podpisu") &&
         !res.body.includes("Authentication Ready");
       return { ...res, status: valid ? 200 : res.status === 200 ? 500 : res.status };
     },
-    { status: 200, bodyIncludes: "Signature preview" },
+    { status: 200, bodyIncludes: "Podgląd podpisu" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   [
@@ -826,7 +831,7 @@ const steps = [
   [
     "employees page shows the no-logo placeholder after removal",
     () => request("/employees"),
-    { status: 200, bodyIncludes: "No logo set" },
+    { status: 200, bodyIncludes: "Nie dodano jeszcze logo" },
   ],
   [
     "first user deletes the optional-email employee",

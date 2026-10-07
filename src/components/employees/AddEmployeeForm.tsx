@@ -36,10 +36,10 @@ export default function AddEmployeeForm() {
 
   function validate(): boolean {
     const next: FormErrors = {};
-    if (!firstName.trim()) next.firstName = "First name is required";
-    if (!lastName.trim()) next.lastName = "Last name is required";
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = "Enter a valid email address";
-    if (!position.trim()) next.position = "Position is required";
+    if (!firstName.trim()) next.firstName = "Podaj imię";
+    if (!lastName.trim()) next.lastName = "Podaj nazwisko";
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = "Wpisz prawidłowy adres e-mail";
+    if (!position.trim()) next.position = "Podaj stanowisko";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -63,8 +63,7 @@ export default function AddEmployeeForm() {
       });
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setServerError(body?.error ?? "Failed to add employee");
+        setServerError("Nie udało się dodać pracownika. Sprawdź dane i spróbuj ponownie.");
         setIsSubmitting(false);
         return;
       }
@@ -72,7 +71,7 @@ export default function AddEmployeeForm() {
       // Full-page navigation so the server-rendered list picks up the new employee.
       window.location.href = "/employees";
     } catch {
-      setServerError("Failed to add employee");
+      setServerError("Nie udało się dodać pracownika.");
       setIsSubmitting(false);
     }
   }
@@ -81,7 +80,7 @@ export default function AddEmployeeForm() {
     phone.trim().length > 0 && !phoneLooksValid(phone) ? (
       <p className="mt-1 flex items-center gap-1 text-xs text-yellow-300">
         <AlertTriangle className="size-3" />
-        This doesn&apos;t look like a valid phone number (9 digits), but you can still submit.
+        Numer telefonu może być nieprawidłowy (powinien mieć 9 cyfr), ale możesz mimo to zapisać formularz.
       </p>
     ) : undefined;
 
@@ -90,7 +89,7 @@ export default function AddEmployeeForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="firstName" className="text-muted-foreground mb-1 block text-sm">
-            First name
+            Imię
           </Label>
           <Input
             id="firstName"
@@ -111,7 +110,7 @@ export default function AddEmployeeForm() {
 
         <div>
           <Label htmlFor="lastName" className="text-muted-foreground mb-1 block text-sm">
-            Last name
+            Nazwisko
           </Label>
           <Input
             id="lastName"
@@ -133,7 +132,7 @@ export default function AddEmployeeForm() {
 
       <div>
         <Label htmlFor="email" className="text-muted-foreground mb-1 block text-sm">
-          Email (optional)
+          E-mail (opcjonalnie)
         </Label>
         <Input
           id="email"
@@ -155,7 +154,7 @@ export default function AddEmployeeForm() {
 
       <div>
         <Label htmlFor="position" className="text-muted-foreground mb-1 block text-sm">
-          Position
+          Stanowisko
         </Label>
         <Input
           id="position"
@@ -176,7 +175,7 @@ export default function AddEmployeeForm() {
 
       <div>
         <Label htmlFor="phone" className="text-muted-foreground mb-1 block text-sm">
-          Phone
+          Telefon
         </Label>
         <Input
           id="phone"
@@ -194,12 +193,12 @@ export default function AddEmployeeForm() {
         {isSubmitting ? (
           <span className="flex items-center gap-2">
             <span className="border-primary-foreground/30 border-t-primary-foreground size-4 animate-spin rounded-full border-2" />
-            Adding...
+            Dodawanie...
           </span>
         ) : (
           <span className="flex items-center gap-2">
             <UserPlus className="size-4" />
-            Add employee
+            Dodaj pracownika
           </span>
         )}
       </Button>

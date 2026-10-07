@@ -13,15 +13,15 @@ interface DepartmentLogoManagerProps {
 
 function validateFile(file: File | null, requireSelection: boolean): string | null {
   if (!file) {
-    return requireSelection ? "Select a PNG, JPG, or SVG image to upload" : null;
+    return requireSelection ? "Wybierz obraz PNG, JPG lub SVG do przesłania" : null;
   }
 
   if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-    return "File must be a PNG, JPG, or SVG image";
+    return "Plik musi być obrazem PNG, JPG lub SVG";
   }
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    return "File must be 2MB or smaller";
+    return "Plik nie może być większy niż 2 MB";
   }
 
   return null;
@@ -71,7 +71,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
     const file = selectedFile;
     const validationError = validateFile(file, true);
     if (validationError || !file) {
-      setFileError(validationError ?? "Select a PNG, JPG, or SVG image to upload");
+      setFileError(validationError ?? "Wybierz obraz PNG, JPG lub SVG do przesłania");
       return;
     }
 
@@ -88,15 +88,14 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
       });
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setRequestError(body?.error ?? "Failed to upload logo");
+        setRequestError("Nie udało się przesłać logo. Sprawdź plik i spróbuj ponownie.");
         setIsUploading(false);
         return;
       }
 
       window.location.assign("/employees");
     } catch {
-      setRequestError("Failed to upload logo");
+      setRequestError("Nie udało się przesłać logo.");
       setIsUploading(false);
     }
   }
@@ -122,15 +121,14 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
       const response = await fetch("/api/departments/logo", { method: "DELETE" });
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        setRequestError(body?.error ?? "Failed to remove logo");
+        setRequestError("Nie udało się usunąć logo. Spróbuj ponownie.");
         setIsRemoving(false);
         return;
       }
 
       window.location.assign("/employees");
     } catch {
-      setRequestError("Failed to remove logo");
+      setRequestError("Nie udało się usunąć logo.");
       setIsRemoving(false);
     }
   }
@@ -138,9 +136,9 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
   return (
     <section className="border-border bg-card mb-8 rounded-2xl border p-6 backdrop-blur-sm">
       <div className="mb-4">
-        <h2 className="text-foreground text-lg font-semibold">Department logo</h2>
+        <h2 className="text-foreground text-lg font-semibold">Logo działu</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Upload the image used across signatures for everyone in your department.
+          Dodaj logo, które będzie używane w podpisach wszystkich osób z działu.
         </p>
       </div>
 
@@ -149,12 +147,12 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
           {initialLogoUrl ? (
             <img
               src={initialLogoUrl}
-              alt="Current department logo"
+              alt="Aktualne logo działu"
               className="bg-muted h-40 w-full object-contain p-4"
             />
           ) : (
             <div className="text-muted-foreground flex h-40 items-center justify-center px-4 text-center text-sm">
-              No logo set
+              Nie dodano jeszcze logo
             </div>
           )}
         </div>
@@ -162,7 +160,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
         <form onSubmit={handleUpload} className="space-y-4" noValidate>
           <div>
             <Label htmlFor="department-logo" className="text-muted-foreground mb-1 block text-sm">
-              Logo file
+              Plik z logo
             </Label>
             <Input
               id="department-logo"
@@ -174,7 +172,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
             />
             <p className="mt-1 flex items-center gap-1 text-xs text-yellow-300">
               <AlertTriangle className="size-3" />
-              PNG, JPG, or SVG up to 2MB.
+              PNG, JPG lub SVG, maksymalnie 2 MB.
             </p>
           </div>
 
@@ -188,11 +186,11 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
           <div className="flex flex-wrap items-center gap-2">
             <Button type="submit" disabled={isBusy}>
               {isUploading ? (
-                "Uploading..."
+                "Przesyłanie..."
               ) : (
                 <>
                   <Upload className="size-4" />
-                  {initialLogoUrl ? "Replace logo" : "Upload"}
+                  {initialLogoUrl ? "Zmień logo" : "Prześlij logo"}
                 </>
               )}
             </Button>
@@ -200,7 +198,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
             {initialLogoUrl ? (
               isConfirmingRemove ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-xs">Are you sure?</span>
+                  <span className="text-muted-foreground text-xs">Czy na pewno usunąć logo?</span>
                   <Button
                     type="button"
                     size="sm"
@@ -210,16 +208,16 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
                       void handleRemove();
                     }}
                   >
-                    {isRemoving ? "Removing..." : "Yes"}
+                    {isRemoving ? "Usuwanie..." : "Tak, usuń"}
                   </Button>
                   <Button type="button" size="sm" variant="outline" disabled={isBusy} onClick={cancelRemoveConfirm}>
-                    No
+                    Anuluj
                   </Button>
                 </div>
               ) : (
                 <Button type="button" variant="outline" disabled={isBusy} onClick={startRemoveConfirm}>
                   <Trash2 className="size-4" />
-                  Remove logo
+                  Usuń logo
                 </Button>
               )
             ) : null}

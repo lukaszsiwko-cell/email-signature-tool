@@ -1,0 +1,566 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Apply local Supabase migrations",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"up",
+				"--local"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect local Supabase migration history",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"list",
+				"--local"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 1 Astro check",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"astro",
+				"check"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Recheck S-05 employee email types",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"astro",
+				"check"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 1 lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"lint"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 1 smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 1 build",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase migration repair help",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"repair",
+				"--help"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Supabase local migration status before repair",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"list",
+				"--local"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Repair local Supabase migration history",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"repair",
+				"--status",
+				"applied",
+				"20260922193159",
+				"20260928000000",
+				"20260928000001",
+				"--local",
+				"--yes"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Apply employee email migration locally",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"up",
+				"--local"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 1 local smoke test",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Re-run S-05 local smoke test",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify employee email migration data",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"select count(*) as total_employees, count(*) filter (where email is null) as employees_without_email from public.employees;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify applied local migrations",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"list",
+				"--local"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 final Astro check",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"astro",
+				"check"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check local pg_cron availability",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"select name, default_version from pg_available_extensions where name = 'pg_cron';"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect available Postgres extensions",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"select name, default_version from pg_available_extensions"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect installed Postgres extension schemas",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"select extname, extnamespace::regnamespace from pg_extension"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Apply signature delivery migration locally",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"migration",
+				"up",
+				"--local"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check phase 2 smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify signature delivery cleanup schedule",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"select jobid, jobname, schedule from cron.job"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 2 Astro check",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"astro",
+				"check"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 2 production build",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify expired signature token behavior",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"do $body$ declare test_employee public.employees%rowtype; test_hash text := repeat(md5(random()::text), 2); begin select * into test_employee from public.employees limit 1; if test_employee.id is null then raise exception 'no local employee available for expiry check'; end if; insert into public.signature_deliveries (department_id, employee_id, token_hash, artifact_bundle, expires_at) values (test_employee.department_id, test_employee.id, test_hash, jsonb_build_object($value$outlookHtml$value$, $value$expired-test$value$, $value$thunderbirdInstaller$value$, $value$expired-test$value$, $value$thunderbirdLauncher$value$, $value$expired-test$value$), now() - interval $value$1 minute$value$); if public.redeem_signature_delivery(test_hash) is not null then raise exception 'expired token was redeemed'; end if; delete from public.signature_deliveries where token_hash = test_hash; end $body$;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify expired delivery redemption path",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"do $body$ declare test_employee public.employees%rowtype; test_hash text := repeat(md5(random()::text), 2); begin select * into test_employee from public.employees limit 1; if test_employee.id is null then return; end if; insert into public.signature_deliveries (department_id, employee_id, token_hash, artifact_bundle, expires_at) values (test_employee.department_id, test_employee.id, test_hash, jsonb_build_object($value$outlookHtml$value$, $value$expired-test$value$, $value$thunderbirdInstaller$value$, $value$expired-test$value$, $value$thunderbirdLauncher$value$, $value$expired-test$value$), now() - interval $value$1 minute$value$); if public.redeem_signature_delivery(test_hash) is not null then raise exception $value$expired token redeemed$value$; end if; delete from public.signature_deliveries where token_hash = test_hash; end $body$;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify signature delivery grants",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"select rolname, has_table_privilege(oid, $q$public.signature_deliveries$q$, $q$select$q$) as can_select, has_table_privilege(oid, $q$public.signature_deliveries$q$, $q$insert$q$) as can_insert from pg_roles where rolname in ($q$anon$q$, $q$authenticated$q$)"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Confirm no test signature deliveries remain",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"select count(*) as remaining_delivery_rows from public.signature_deliveries"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 3 smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 3 smoke",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 3 Astro check",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"astro",
+				"check"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check relay client TypeScript syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--experimental-strip-types",
+				"--check",
+				"src/lib/services/email-relay-client.ts"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Probe Node TypeScript relay test import",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--experimental-strip-types",
+				"--input-type=module",
+				"-e",
+				"import('./src/lib/services/email-relay-client.ts').then(() => console.log('relay client loaded'))"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check relay mock smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run S-05 phase 3 mock relay and smoke tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check phase 3 email isolation smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Re-run S-05 phase 3 security smoke",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify failed-send delivery revocation RPC",
+			"type": "shell",
+			"command": "npx.cmd",
+			"args": [
+				"supabase",
+				"db",
+				"query",
+				"--local",
+				"do $body$ declare test_employee public.employees%rowtype; test_hash text := repeat(md5(random()::text), 2); begin select * into test_employee from public.employees limit 1; if test_employee.id is null then return; end if; insert into public.signature_deliveries (department_id, employee_id, token_hash, artifact_bundle, expires_at) values (test_employee.department_id, test_employee.id, test_hash, jsonb_build_object($value$outlookHtml$value$, $value$test$value$, $value$thunderbirdInstaller$value$, $value$test$value$, $value$thunderbirdLauncher$value$, $value$test$value$), now() + interval $value$1 hour$value$); perform public.revoke_signature_delivery(test_hash); if exists (select 1 from public.signature_deliveries where token_hash = test_hash) then raise exception $value$revocation failed$value$; end if; end $body$;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check relay error smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 phase 3 relay cases smoke",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check optional employee email smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check optional email cleanup test syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "S-05 optional employee email smoke",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check repaired optional email smoke syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check optional email smoke cleanup syntax",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"--check",
+				"scripts/smoke.mjs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run optional email smoke tests",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"run",
+				"smoke"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

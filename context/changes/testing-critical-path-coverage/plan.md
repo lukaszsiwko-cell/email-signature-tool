@@ -425,23 +425,23 @@ changes.
 
 #### Automated
 
-- [x] 2.1 npm run test:unit passes, including all fixture/field combinations from the named set across all four employee fields
-- [x] 2.2 npm run lint passes
+- [x] 2.1 npm run test:unit passes, including all fixture/field combinations from the named set across all four employee fields — 1443a88
+- [x] 2.2 npm run lint passes — 1443a88
 
 #### Manual
 
-- [x] 2.3 Temporarily remove one escapeHtml() call and confirm the new unit test fails with a clear assertion message, then revert
+- [x] 2.3 Temporarily remove one escapeHtml() call and confirm the new unit test fails with a clear assertion message, then revert — 1443a88
 
 ### Phase 3: Risk #1 integration tests — cross-department IDOR
 
 #### Automated
 
 - [ ] 3.1 npm run test:integration passes against a locally running supabase start + astro dev (or preview) server, covering all five resources
-- [ ] 3.2 npm run lint passes
+- [x] 3.2 npm run lint passes
 
 #### Manual
 
-- [ ] 3.3 With BASE_URL unset or the server stopped, confirm npm run test:integration fails with the clear precondition error, not a raw ECONNREFUSED stack trace
+- [x] 3.3 With BASE_URL unset or the server stopped, confirm npm run test:integration fails with the clear precondition error, not a raw ECONNREFUSED stack trace
 - [ ] 3.4 Temporarily comment out one RLS policy predicate locally, confirm the corresponding new test fails, then revert
 
 ### Phase 4: Docs & cookbook

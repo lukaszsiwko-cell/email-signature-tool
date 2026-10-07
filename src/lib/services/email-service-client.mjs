@@ -20,7 +20,17 @@ export async function sendSignatureEmail(emailBinding, config, message) {
       subject: "Your email signature files",
       text: `Download your email signature files using this one-time link:\n\n${downloadUrl}\n\nThe link expires in 24 hours. Open it and choose Get signature files to download the Outlook and Thunderbird files.`,
     });
-  } catch {
-    throw new Error("Cloudflare Email Service rejected the message");
+  } catch (error) {
+    const code =
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      typeof error.code === "string" &&
+      /^E_[A-Z0-9_]+$/.test(error.code)
+        ? error.code
+        : "UNKNOWN";
+    const wrappedError = new Error("Cloudflare Email Service rejected the message");
+    wrappedError.code = code;
+    throw wrappedError;
   }
 }

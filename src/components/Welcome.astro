@@ -1,5 +1,5 @@
 ---
-import { ArrowRight, FileCode2, Mail, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, Building2, Check, FileCode2, Mail, ShieldCheck, Users } from "lucide-react";
 import Topbar from "@/components/Topbar.astro";
 
 const { user } = Astro.locals;
@@ -14,13 +14,13 @@ const { user } = Astro.locals;
         <section>
           <p class="text-primary mb-4 flex items-center gap-2 text-xs font-semibold uppercase">
             <span class="size-2 rounded-full bg-primary"></span>
-            Email signature workspace
+            Generator podpisów e-mail
           </p>
           <h1 class="mb-4 text-4xl leading-tight font-semibold text-white sm:text-5xl">
-            Signatures that feel like your team.
+            Podpisy, które pasują do Twojego zespołu.
           </h1>
           <p class="max-w-lg text-base leading-relaxed text-blue-100/70">
-            Manage employee details, set your department logo, and prepare polished signatures for every inbox.
+            Zarządzaj danymi pracowników, dodaj logo działu i przygotuj profesjonalne podpisy do każdej skrzynki.
           </p>
 
           <a
@@ -28,24 +28,24 @@ const { user } = Astro.locals;
             class="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <Users className="size-4" />
-            Manage employees
+            Zarządzaj pracownikami
             <ArrowRight className="size-4" />
           </a>
 
           <div class="mt-8 flex max-w-md items-start gap-3 border-t border-white/10 pt-5">
             <ShieldCheck className="text-primary mt-0.5 size-5 shrink-0" />
             <p class="text-sm leading-relaxed text-blue-100/60">
-              Employee records and signature downloads stay separated by department.
+              Dane pracowników i pobrane podpisy są odseparowane dla każdego działu.
             </p>
           </div>
         </section>
 
-        <section aria-label="Sample email signature preview" class="mx-auto w-full max-w-xl">
+        <section aria-label="Podgląd przykładowego podpisu e-mail" class="mx-auto w-full max-w-xl">
           <div class="overflow-hidden rounded-lg border border-white/15 bg-white shadow-2xl shadow-black/20">
             <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <div>
-                <p class="text-xs font-semibold uppercase text-slate-500">Signature preview</p>
-                <p class="mt-1 text-sm font-medium text-slate-900">Example only</p>
+                <p class="text-xs font-semibold uppercase text-slate-500">Podgląd podpisu</p>
+                <p class="mt-1 text-sm font-medium text-slate-900">Przykład</p>
               </div>
               <Mail className="size-5 text-emerald-700" />
             </div>
@@ -56,28 +56,28 @@ const { user } = Astro.locals;
                   <FileCode2 className="size-6" />
                 </div>
                 <div>
-                  <p class="text-lg font-semibold text-slate-950">Your Name</p>
-                  <p class="mt-0.5 text-sm text-slate-600">Your role · Your department</p>
+                  <p class="text-lg font-semibold text-slate-950">Imię i nazwisko</p>
+                  <p class="mt-0.5 text-sm text-slate-600">Stanowisko · Dział</p>
                 </div>
               </div>
               <div class="mt-5 border-l-2 border-emerald-700 pl-4 text-sm leading-6 text-slate-600">
-                <p>you@company.com</p>
-                <p>+1 (555) 010-0000</p>
-                <p class="font-medium text-emerald-800">company.com</p>
+                <p>imie@firma.pl</p>
+                <p>+48 500 000 000</p>
+                <p class="font-medium text-emerald-800">firma.pl</p>
               </div>
             </div>
 
             <div class="border-t border-slate-200 bg-slate-50 px-5 py-4">
-              <p class="mb-3 text-xs font-semibold uppercase text-slate-500">Ready-to-use files</p>
+              <p class="mb-3 text-xs font-semibold uppercase text-slate-500">Gotowe do użycia</p>
               <div class="grid gap-2 sm:grid-cols-3">
                 <div class="flex items-center gap-2 text-xs font-medium text-slate-700">
-                  <FileCode2 className="size-4 text-emerald-700" /> Outlook HTML
+                  <FileCode2 className="size-4 text-emerald-700" /> HTML dla Outlooka
                 </div>
                 <div class="flex items-center gap-2 text-xs font-medium text-slate-700">
-                  <Mail className="size-4 text-emerald-700" /> Thunderbird setup
+                  <Mail className="size-4 text-emerald-700" /> Konfiguracja Thunderbird
                 </div>
                 <div class="flex items-center gap-2 text-xs font-medium text-slate-700">
-                  <ArrowRight className="size-4 text-emerald-700" /> One-time link
+                  <ArrowRight className="size-4 text-emerald-700" /> Link jednorazowy
                 </div>
               </div>
             </div>
@@ -87,112 +87,117 @@ const { user } = Astro.locals;
     </div>
   </div>
 ) : (
-  <div class="bg-cosmic relative min-h-screen w-full overflow-hidden">
-    <!-- Cosmic orbs -->
-    <div class="pointer-events-none absolute top-1/4 -left-24 h-[350px] w-[350px] rounded-full bg-purple-500/20 blur-[120px]"></div>
-    <div class="pointer-events-none absolute top-2/3 -right-16 h-[250px] w-[250px] rounded-full bg-blue-500/15 blur-[100px]"></div>
-    <div class="pointer-events-none absolute top-0 left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-indigo-400/10 blur-[140px]"></div>
-
-    <!-- Star field -->
-    <div
-      class="pointer-events-none absolute inset-0"
-      style="background-image: radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px); background-size: 200px 200px, 150px 150px, 100px 100px; background-position: 0 0, 40px 60px, 80px 30px;"
-    ></div>
+  <div class="relative min-h-screen w-full overflow-hidden bg-[#101d1a] text-white">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_15%,rgba(16,185,129,0.18),transparent_42%),linear-gradient(135deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-size-[auto,36px_36px]"></div>
 
     <div class="relative z-10 p-4 sm:p-8">
       <Topbar />
 
-      <!-- Hero section -->
-      <div class="mx-auto flex max-w-4xl flex-col items-center justify-center px-4 py-24 text-center sm:py-32 lg:py-40">
-        <h1 class="mb-6 bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-5xl leading-tight font-bold text-transparent sm:text-6xl lg:text-7xl">
-          Email signature tool
-        </h1>
-        <p class="mb-10 max-w-2xl text-lg text-blue-100/70 sm:text-xl">
-          A production-ready starter with authentication, modern tooling, and a cosmic developer experience.
-        </p>
-        <div class="flex flex-col gap-4 sm:flex-row">
-          <a
-            href="/auth/signin"
-            class="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Sign In
-          </a>
-          <a
-            href="/auth/signup"
-            class="inline-flex items-center justify-center rounded-lg border border-white/20 px-6 py-3 text-base font-medium text-white transition-colors hover:bg-white/10"
-          >
-            Sign Up
-          </a>
-        </div>
-      </div>
-
-      <!-- Feature cards -->
-      <div class="mx-auto grid max-w-4xl grid-cols-1 gap-6 px-4 pb-24 sm:grid-cols-3">
-        <div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="mb-4 text-primary"
-          >
-            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          <h3 class="mb-2 text-lg font-semibold text-white">Authentication Ready</h3>
-          <p class="text-sm leading-relaxed text-blue-100/60">
-            Built-in Supabase auth with sign in, sign up, and protected routes out of the box.
+      <main class="mx-auto grid max-w-6xl items-center gap-14 px-4 py-16 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:py-28">
+        <section>
+          <p class="mb-5 flex items-center gap-2 text-xs font-semibold uppercase text-emerald-300">
+            <span class="size-2 rounded-full bg-emerald-400"></span>
+            Firmowa komunikacja, jeden standard
           </p>
-        </div>
-
-        <div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="mb-4 text-primary"
-          >
-            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-            <polyline points="2 17 12 22 22 17"></polyline>
-            <polyline points="2 12 12 17 22 12"></polyline>
-          </svg>
-          <h3 class="mb-2 text-lg font-semibold text-white">Modern Stack</h3>
-          <p class="text-sm leading-relaxed text-blue-100/60">
-            Astro 7, React 19, Tailwind 4, and TypeScript — the latest tools, ready to go.
+          <h1 class="max-w-xl text-4xl leading-tight font-semibold sm:text-5xl lg:text-6xl">
+            Każdy e-mail zaczyna się od dobrego podpisu.
+          </h1>
+          <p class="mt-6 max-w-lg text-base leading-relaxed text-emerald-50/70 sm:text-lg">
+            Przygotuj spójne podpisy dla całego zespołu. Dane pracowników, logo działu i gotowe pliki w jednym miejscu.
           </p>
-        </div>
-
-        <div class="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="mb-4 text-primary"
-          >
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
-          </svg>
-          <h3 class="mb-2 text-lg font-semibold text-white">Developer Experience</h3>
-          <p class="text-sm leading-relaxed text-blue-100/60">
-            ESLint, Prettier, and pre-commit hooks keep your codebase clean from day one.
+          <div class="mt-9 flex flex-col gap-3 sm:flex-row">
+            <a
+              href="/auth/signup"
+              class="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-emerald-400 px-5 py-3 text-sm font-semibold text-[#10231d] transition-colors hover:bg-emerald-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200"
+            >
+              Zacznij tworzyć podpisy
+              <ArrowRight className="size-4" />
+            </a>
+            <a
+              href="/auth/signin"
+              class="inline-flex min-h-12 items-center justify-center rounded-md border border-white/20 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              Zaloguj się
+            </a>
+          </div>
+          <p class="mt-5 flex items-center gap-2 text-sm text-emerald-50/55">
+            <ShieldCheck className="size-4 text-emerald-300" />
+            Dane każdego działu pozostają odseparowane.
           </p>
+        </section>
+
+        <section aria-label="Przykład wiadomości z podpisem e-mail" class="relative mx-auto w-full max-w-xl">
+          <div class="absolute -inset-4 -z-10 rounded-2xl bg-emerald-400/10 blur-2xl"></div>
+          <div class="overflow-hidden rounded-lg border border-white/15 bg-white text-slate-800 shadow-2xl shadow-black/30">
+            <div class="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-5 py-4">
+              <span class="size-2.5 rounded-full bg-rose-400"></span>
+              <span class="size-2.5 rounded-full bg-amber-400"></span>
+              <span class="size-2.5 rounded-full bg-emerald-500"></span>
+              <div class="ml-3 flex min-w-0 flex-1 items-center gap-2 rounded-md bg-white px-3 py-2 text-xs text-slate-500">
+                <Mail className="size-4 shrink-0 text-emerald-700" />
+                <span class="truncate">Wiadomość · Odebrane</span>
+              </div>
+            </div>
+            <div class="p-6 sm:p-8">
+              <p class="text-xs font-semibold uppercase text-slate-400">Podgląd wiadomości</p>
+              <p class="mt-5 text-sm font-semibold text-slate-900">Dziękuję za rozmowę</p>
+              <p class="mt-1 text-xs text-slate-500">Do: Alex Morgan</p>
+              <p class="mt-5 text-sm leading-relaxed text-slate-600">
+                Cześć Alex, przesyłam szczegóły naszego spotkania. W razie pytań jestem do dyspozycji.
+              </p>
+              <div class="mt-7 border-t border-slate-200 pt-5">
+                <div class="flex items-center gap-4">
+                  <div class="flex size-12 shrink-0 items-center justify-center rounded-md bg-emerald-100 text-sm font-bold text-emerald-900">
+                    AM
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-slate-950">Alex Morgan</p>
+                    <p class="mt-0.5 text-sm text-slate-500">Customer Success · Northstar</p>
+                  </div>
+                  <div class="ml-auto hidden size-10 shrink-0 items-center justify-center rounded-md bg-emerald-800 text-white sm:flex">
+                    <Building2 className="size-5" />
+                  </div>
+                </div>
+                <div class="mt-4 border-l-2 border-emerald-700 pl-4 text-sm leading-6 text-slate-600">
+                  <p>alex.morgan@northstar.example</p>
+                  <p>+1 555 012 3400</p>
+                  <p class="font-medium text-emerald-800">northstar.example</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
+              <span class="text-xs font-semibold uppercase text-slate-500">Gotowy do użycia</span>
+              <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800">
+                <Check className="size-4" /> Outlook · Thunderbird
+              </span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div class="mx-auto grid max-w-6xl gap-6 border-t border-white/10 px-4 py-8 sm:grid-cols-3 sm:gap-8 sm:py-10">
+        <div class="flex items-start gap-3">
+          <Users className="mt-0.5 size-5 shrink-0 text-emerald-300" />
+          <div>
+            <h2 class="text-sm font-semibold text-white">Zespół w jednym miejscu</h2>
+            <p class="mt-1 text-sm leading-relaxed text-emerald-50/55">Zarządzaj danymi pracowników i działów.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <Building2 className="mt-0.5 size-5 shrink-0 text-emerald-300" />
+          <div>
+            <h2 class="text-sm font-semibold text-white">Spójny wizerunek</h2>
+            <p class="mt-1 text-sm leading-relaxed text-emerald-50/55">Dodaj logo i ujednolić komunikację marki.</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <FileCode2 className="mt-0.5 size-5 shrink-0 text-emerald-300" />
+          <div>
+            <h2 class="text-sm font-semibold text-white">Eksport bez kombinowania</h2>
+            <p class="mt-1 text-sm leading-relaxed text-emerald-50/55">
+              Przygotuj formaty do popularnych klientów poczty.
+            </p>
+          </div>
         </div>
       </div>
     </div>
