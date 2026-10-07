@@ -68,18 +68,12 @@ interface DeliveryMessage {
 
 function getDeliveryErrorMessage(code?: string): string {
   switch (code) {
-    case "E_SENDER_NOT_VERIFIED":
-      return "Adres nadawcy nie jest zweryfikowany w Cloudflare Email Service.";
-    case "E_SENDER_DOMAIN_NOT_AVAILABLE":
-      return "Domena nadawcy nie jest skonfigurowana w Cloudflare Email Service.";
-    case "E_RECIPIENT_NOT_ALLOWED":
-      return "Ten odbiorca nie jest dozwolony w konfiguracji Cloudflare Email Service.";
-    case "E_RECIPIENT_SUPPRESSED":
-      return "Wysyłka na ten adres jest zablokowana przez Cloudflare Email Service.";
-    case "E_RATE_LIMIT_EXCEEDED":
-      return "Przekroczono limit wysyłki. Spróbuj ponownie za chwilę.";
-    case "E_DAILY_LIMIT_EXCEEDED":
-      return "Przekroczono dzienny limit wysyłki Cloudflare Email Service.";
+    case "E_SMTP_AUTH_FAILED":
+      return "Nie udało się zalogować do Gmaila. Sprawdź konto i hasło aplikacji.";
+    case "E_SMTP_CONNECTION_FAILED":
+      return "Nie udało się połączyć z serwerem Gmail SMTP. Spróbuj ponownie.";
+    case "E_SMTP_SEND_FAILED":
+      return "Gmail odrzucił wiadomość. Sprawdź adres nadawcy i odbiorcy.";
     default:
       return "Nie udało się wysłać podpisu e-mailem. Sprawdź konfigurację wysyłki i spróbuj ponownie.";
   }
@@ -96,7 +90,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
   const [generatingEmployeeId, setGeneratingEmployeeId] = useState<string | null>(null);
   const [signatureErrors, setSignatureErrors] = useState<Record<string, string>>({});
   const [sendingEmployeeId, setSendingEmployeeId] = useState<string | null>(null);
-  const [deliveryMessages, setDeliveryMessages] = useState<Record<string, DeliveryMessage>>({});
+  const [deliveryMessages, setDeliveryMessages] = useState<Partial<Record<string, DeliveryMessage>>>({});
 
   function startEdit(employee: EmployeeDTO) {
     setEditingId(employee.id);
@@ -232,7 +226,10 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
         `${filenameBase}-thunderbird-installer.cmd`,
       );
     } catch {
-      setSignatureErrors((current) => ({ ...current, [employee.id]: "Nie udało się wygenerować podpisów. Spróbuj ponownie." }));
+      setSignatureErrors((current) => ({
+        ...current,
+        [employee.id]: "Nie udało się wygenerować podpisów. Spróbuj ponownie.",
+      }));
     } finally {
       setGeneratingEmployeeId(null);
     }
@@ -292,6 +289,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
         {employees.map((employee) => {
           const isEditing = editingId === employee.id;
           const isConfirmingDelete = confirmingDeleteId === employee.id;
+          const deliveryMessage = deliveryMessages[employee.id];
 
           return (
             <TableRow key={employee.id} className="border-border hover:bg-accent/50">
@@ -517,16 +515,16 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             Wysyłka e-maili nie jest skonfigurowana. Użyj opcji „Generuj podpisy”, aby pobrać pliki.
                           </p>
                         ) : null}
-                        {deliveryMessages[employee.id] ? (
+                        {deliveryMessage ? (
                           <p
                             className={
-                              deliveryMessages[employee.id].kind === "error"
+                              deliveryMessage.kind === "error"
                                 ? "text-destructive text-xs"
                                 : "text-muted-foreground text-xs"
                             }
-                            role={deliveryMessages[employee.id].kind === "error" ? "alert" : "status"}
+                            role={deliveryMessage.kind === "error" ? "alert" : "status"}
                           >
-                            {deliveryMessages[employee.id].text}
+                            {deliveryMessage.text}
                           </p>
                         ) : null}
                       </div>

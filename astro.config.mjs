@@ -27,6 +27,8 @@ export default defineConfig({
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       EMAIL_FROM: envField.string({ context: "server", access: "secret", optional: true }),
+      GMAIL_SMTP_USERNAME: envField.string({ context: "server", access: "secret", optional: true }),
+      GMAIL_SMTP_APP_PASSWORD: envField.string({ context: "server", access: "secret", optional: true }),
       PUBLIC_APP_URL: envField.string({ context: "server", access: "secret", optional: true }),
     },
   },

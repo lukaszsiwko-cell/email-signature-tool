@@ -153,13 +153,13 @@ const expectedReplacementLogoBody = replacementLogoSvg.toString("base64");
 
 const steps = [
   [
-    "Cloudflare Email Service receives only recipient, sender, subject, and one-time link",
+    "Gmail SMTP receives only recipient, sender, subject, and one-time link",
     async () => {
       let sentMessage;
       try {
         await sendSignatureEmail(
           {
-            send: async (message) => {
+            sendMail: async (message) => {
               sentMessage = message;
               return { messageId: "mock-message-id" };
             },
@@ -181,22 +181,22 @@ const steps = [
         return {
           status: valid ? 200 : 500,
           location: "",
-          body: valid ? "email binding contract valid" : "invalid email message",
+          body: valid ? "Gmail SMTP contract valid" : "invalid email message",
         };
       } catch {
-        return { status: 500, location: "", body: "email binding call threw" };
+        return { status: 500, location: "", body: "Gmail SMTP call threw" };
       }
     },
-    { status: 200, bodyIncludes: "email binding contract valid" },
+    { status: 200, bodyIncludes: "Gmail SMTP contract valid" },
   ],
   [
-    "Cloudflare Email Service rejects an insecure public app URL before sending",
+    "Gmail SMTP rejects an insecure public app URL before sending",
     async () => {
       let sendCalled = false;
       try {
         await sendSignatureEmail(
           {
-            send: async () => {
+            sendMail: async () => {
               sendCalled = true;
               return { messageId: "mock-message-id" };
             },
@@ -221,38 +221,41 @@ const steps = [
     { status: 200, bodyIncludes: "email HTTPS policy checked" },
   ],
   [
-    "Cloudflare Email Service rejects missing configuration before sending",
+    "Gmail SMTP rejects missing configuration before sending",
     async () => {
       let sendCalled = false;
       try {
         await sendSignatureEmail(
           {
-            send: async () => {
+            sendMail: async () => {
               sendCalled = true;
               return { messageId: "mock-message-id" };
             },
           },
-          { fromAddress: "", publicAppUrl: "", allowLocalHttp: false },
+          {
+            fromAddress: "",
+            publicAppUrl: "",
+            allowLocalHttp: false,
+          },
           { to: "employee@example.test", token: "d".repeat(64) },
         );
       } catch (error) {
-        const valid =
-          !sendCalled && error instanceof Error && error.message === "Cloudflare Email Service is not configured";
+        const valid = !sendCalled && error instanceof Error && error.message === "Gmail SMTP is not configured";
         return { status: valid ? 200 : 500, location: "", body: valid ? error.message : "invalid config handling" };
       }
       return { status: 500, location: "", body: "missing email configuration was accepted" };
     },
-    { status: 200, bodyIncludes: "Cloudflare Email Service is not configured" },
+    { status: 200, bodyIncludes: "Gmail SMTP is not configured" },
   ],
   [
-    "Cloudflare Email Service errors do not expose provider details",
+    "Gmail SMTP errors do not expose provider details",
     async () => {
       try {
         await sendSignatureEmail(
           {
-            send: async () => {
+            sendMail: async () => {
               const error = new Error("private provider diagnostic");
-              error.code = "E_SENDER_NOT_VERIFIED";
+              error.code = "EAUTH";
               throw error;
             },
           },
@@ -267,14 +270,14 @@ const steps = [
       } catch (error) {
         const valid =
           error instanceof Error &&
-          error.message === "Cloudflare Email Service rejected the message" &&
-          error.code === "E_SENDER_NOT_VERIFIED";
+          error.message === "Gmail SMTP rejected the message" &&
+          error.code === "E_SMTP_AUTH_FAILED";
         return { status: valid ? 200 : 500, location: "", body: valid ? error.message : "unsafe network error" };
       }
     },
     {
       status: 200,
-      bodyIncludes: "Cloudflare Email Service rejected the message",
+      bodyIncludes: "Gmail SMTP rejected the message",
       bodyExcludes: "private provider diagnostic",
     },
   ],
@@ -661,7 +664,9 @@ const steps = [
   [
     "first user issues a one-time signature download",
     async () => {
-      const res = await request(`/api/employees/${state.signatureEmployeeAId}/signature-deliveries`, { method: "POST" });
+      const res = await request(`/api/employees/${state.signatureEmployeeAId}/signature-deliveries`, {
+        method: "POST",
+      });
       const delivery = parseJson(res.body);
       const downloadUrl = typeof delivery?.downloadUrl === "string" ? new URL(delivery.downloadUrl, BASE_URL) : null;
       const token = downloadUrl?.hash.slice(1) ?? "";

@@ -128,16 +128,27 @@ SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_KEY=<anon-key>
 ```
 
-### Cloudflare Email Service
+### Gmail SMTP
 
-Sending signature files uses the Cloudflare Email Service `EMAIL` binding. Email Sending is currently a beta feature on the Workers Paid plan. Onboard and verify the sender domain in Cloudflare before sending. Configure these server-only values in `.dev.vars` for local development and in the Worker environment for deployment:
+Signature delivery uses Gmail SMTP through Nodemailer over implicit TLS on `smtp.gmail.com:465`. The Google account must have 2-Step Verification enabled and an [app password](https://myaccount.google.com/apppasswords) created for this app. Use the 16-character app password, not the account password. `EMAIL_FROM` must be the same Gmail address as `GMAIL_SMTP_USERNAME` or a sender alias configured in Gmail. Store these server-only values in `.dev.vars` for local development and as Worker secrets/variables in Cloudflare:
 
-| Variable | Description |
-| --- | --- |
-| `EMAIL_FROM` | Sender address on a domain onboarded to Cloudflare Email Service, such as `signatures@example.com`. |
-| `PUBLIC_APP_URL` | Public base URL used to create recipient links; use `http://localhost:4321` locally and the deployed HTTPS origin in production. |
+| Variable                  | Description                                                                                                                      |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `GMAIL_SMTP_USERNAME`     | Gmail account used to authenticate, for example `team@gmail.com`.                                                                |
+| `GMAIL_SMTP_APP_PASSWORD` | Google app password. Always store as a secret; never commit it.                                                                  |
+| `EMAIL_FROM`              | Sender address matching the Gmail account or one of its configured aliases.                                                      |
+| `PUBLIC_APP_URL`          | Public base URL used to create recipient links; use `http://localhost:4321` locally and the deployed HTTPS origin in production. |
 
-The binding is declared in `wrangler.jsonc`. By default, local development simulates sending and logs the message without delivering it. To send real messages locally, configure the binding with `"remote": true`; this requires Cloudflare authentication and sends to real recipients. The email contains a one-time download link, not the generated signature files. When the sender address or public URL is missing, the send action returns an error and does not create a usable link.
+Example `.dev.vars` entries:
+
+```dotenv
+GMAIL_SMTP_USERNAME=team@gmail.com
+GMAIL_SMTP_APP_PASSWORD=your-16-character-app-password
+EMAIL_FROM=team@gmail.com
+PUBLIC_APP_URL=http://localhost:4321
+```
+
+The email contains a one-time download link, not the generated signature files. If configuration is missing or Gmail rejects the send, the app revokes the unused delivery token and reports a safe, actionable error.
 
 ### Email confirmation in local development
 
@@ -171,18 +182,19 @@ npm run build
 npx wrangler deploy
 ```
 
-Set `SUPABASE_URL`, `SUPABASE_KEY`, `EMAIL_FROM`, and `PUBLIC_APP_URL` in the Worker environment. Configure `EMAIL_FROM` and `PUBLIC_APP_URL` as variables; keep the Supabase credentials in the secret store.
+Set `SUPABASE_URL`, `SUPABASE_KEY`, `GMAIL_SMTP_USERNAME`, `GMAIL_SMTP_APP_PASSWORD`, `EMAIL_FROM`, and `PUBLIC_APP_URL` for the Production Worker. Store `SUPABASE_URL`, `SUPABASE_KEY`, and `GMAIL_SMTP_APP_PASSWORD` as secrets; configure the remaining values as variables.
 
 ```bash
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_KEY
+npx wrangler secret put GMAIL_SMTP_APP_PASSWORD
 ```
 
 ### Automatic deploy on push to `master`
 
 This project uses **Cloudflare Workers Builds' native Git integration** for auto-deploy — configured once in the Cloudflare dashboard (Workers & Pages → this Worker → Settings → Build → Connect to Git), not GitHub Actions. GitHub Actions (`.github/workflows/ci.yml`) only runs lint/`astro check`/build/smoke and does not deploy.
 
-All four values must additionally be configured in the Cloudflare dashboard (Settings → Variables and Secrets) for the Production environment — these are separate from Wrangler CLI values and GitHub Actions secrets. `SUPABASE_URL` and `SUPABASE_KEY` are **Secrets**; `EMAIL_FROM` and `PUBLIC_APP_URL` are regular variables. The `EMAIL` binding is configured by `wrangler.jsonc`.
+All six values must additionally be configured in the Cloudflare dashboard (Settings → Variables and Secrets) for the Production environment — these are separate from Wrangler CLI values and GitHub Actions secrets. `SUPABASE_URL`, `SUPABASE_KEY`, and `GMAIL_SMTP_APP_PASSWORD` are **Secrets**; `GMAIL_SMTP_USERNAME`, `EMAIL_FROM`, and `PUBLIC_APP_URL` are regular variables. Gmail does not use a Cloudflare `send_email` binding.
 
 ### Post-deploy one-off: backfilling `profiles` for pre-existing accounts
 

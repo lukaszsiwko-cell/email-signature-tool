@@ -1,10 +1,5 @@
-interface EmailBinding {
-  send(message: {
-    from: string;
-    to: string;
-    subject: string;
-    text: string;
-  }): Promise<unknown>;
+interface EmailTransport {
+  sendMail(message: { from: string; to: string; subject: string; text: string }): Promise<{ messageId?: string }>;
 }
 
 interface EmailServiceConfig {
@@ -19,7 +14,7 @@ interface SignatureEmail {
 }
 
 export function sendSignatureEmail(
-  emailBinding: EmailBinding,
+  emailTransport: EmailTransport,
   config: EmailServiceConfig,
   message: SignatureEmail,
 ): Promise<void>;

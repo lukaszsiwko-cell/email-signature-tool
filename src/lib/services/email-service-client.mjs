@@ -1,6 +1,6 @@
-export async function sendSignatureEmail(emailBinding, config, message) {
-  if (!emailBinding || !config.fromAddress || !config.publicAppUrl) {
-    throw new Error("Cloudflare Email Service is not configured");
+export async function sendSignatureEmail(emailTransport, config, message) {
+  if (!emailTransport || !config.fromAddress || !config.publicAppUrl) {
+    throw new Error("Gmail SMTP is not configured");
   }
 
   const appUrl = new URL(config.publicAppUrl);
@@ -14,22 +14,21 @@ export async function sendSignatureEmail(emailBinding, config, message) {
   downloadUrl.hash = message.token;
 
   try {
-    await emailBinding.send({
+    await emailTransport.sendMail({
       from: config.fromAddress,
       to: message.to,
       subject: "Your email signature files",
       text: `Download your email signature files using this one-time link:\n\n${downloadUrl}\n\nThe link expires in 24 hours. Open it and choose Get signature files to download the Outlook and Thunderbird files.`,
     });
   } catch (error) {
+    const transportCode = error && typeof error === "object" && "code" in error ? error.code : undefined;
     const code =
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      typeof error.code === "string" &&
-      /^E_[A-Z0-9_]+$/.test(error.code)
-        ? error.code
-        : "UNKNOWN";
-    const wrappedError = new Error("Cloudflare Email Service rejected the message");
+      transportCode === "EAUTH"
+        ? "E_SMTP_AUTH_FAILED"
+        : ["ECONNECTION", "ETIMEDOUT", "ESOCKET", "EDNS", "ECONNRESET", "EPIPE"].includes(transportCode)
+          ? "E_SMTP_CONNECTION_FAILED"
+          : "E_SMTP_SEND_FAILED";
+    const wrappedError = new Error("Gmail SMTP rejected the message");
     wrappedError.code = code;
     throw wrappedError;
   }
