@@ -52,7 +52,7 @@ function createHtml(employee: EmployeeDTO, logo: DepartmentLogoAsset | null): st
 function createThunderbirdInstaller(signatureHtml: string): string {
   const signatureHtmlBase64 = encodeBase64(new TextEncoder().encode(signatureHtml));
 
-  return String.raw`$ErrorActionPreference = 'Stop'
+  return "\uFEFF" + String.raw`$ErrorActionPreference = 'Stop'
 $signatureHtml = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${signatureHtmlBase64}'))
 while (Get-Process -Name 'thunderbird' -ErrorAction SilentlyContinue) {
   Write-Host 'Zapisz swoją pracę i zamknij Thunderbirda przed kontynuowaniem.'

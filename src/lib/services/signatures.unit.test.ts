@@ -1,3 +1,7 @@
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import type { DepartmentLogoAsset } from "./departments";
@@ -85,6 +89,38 @@ function createEmployeeWithField(field: TestedEmployeeField, value: string): Emp
 }
 
 describe("generateSignatureArtifacts", () => {
+  it("prefixes the UTF-8 installer with a BOM for Windows PowerShell 5.1", () => {
+    const artifacts = generateSignatureArtifacts(baseEmployee, null);
+    const installerBytes = new TextEncoder().encode(artifacts.thunderbirdInstaller);
+
+    expect(Array.from(installerBytes.subarray(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+  });
+
+  it.skipIf(process.platform !== "win32")("parses the installer in Windows PowerShell without executing it", () => {
+    const directory = mkdtempSync(join(tmpdir(), "thunderbird-installer-"));
+    const installerPath = join(directory, "installer.ps1");
+
+    try {
+      const artifacts = generateSignatureArtifacts(baseEmployee, null);
+      writeFileSync(installerPath, artifacts.thunderbirdInstaller, "utf8");
+
+      expect(() =>
+        execFileSync(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            "$tokens = $null; $parseErrors = $null; [System.Management.Automation.Language.Parser]::ParseFile($env:TEST_INSTALLER_PATH, [ref]$tokens, [ref]$parseErrors) | Out-Null; if ($parseErrors.Count -gt 0) { $parseErrors | ForEach-Object { [Console]::Error.WriteLine($_.Message) }; exit 1 }",
+          ],
+          { env: { ...process.env, TEST_INSTALLER_PATH: installerPath }, stdio: "pipe" },
+        ),
+      ).not.toThrow();
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("omits the logo markup for a clean fixture when logo is null", () => {
     const artifacts = generateSignatureArtifacts(baseEmployee, null);
     const { decodedHtml, installerWithoutBlob } = decodeInstallerPayload(artifacts.thunderbirdInstaller);
