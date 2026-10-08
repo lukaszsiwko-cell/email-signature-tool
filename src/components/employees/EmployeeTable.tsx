@@ -280,30 +280,34 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
     ) : undefined;
 
   return (
-    <Table>
-      <TableHeader>
+    <Table className="max-lg:[&_td]:before:text-muted-foreground table-fixed [&_td]:min-w-0 [&_td]:align-top [&_td]:break-words [&_td]:whitespace-normal max-lg:[&_td]:before:mb-1 max-lg:[&_td]:before:block max-lg:[&_td]:before:text-xs max-lg:[&_td]:before:content-[attr(data-label)]">
+      <TableHeader className="hidden lg:table-header-group">
         <TableRow className="border-border hover:bg-transparent">
           <TableHead className="text-muted-foreground">Imię</TableHead>
           <TableHead className="text-muted-foreground">Nazwisko</TableHead>
-          <TableHead className="text-muted-foreground">E-mail</TableHead>
+          <TableHead className="text-muted-foreground w-1/4">E-mail</TableHead>
           <TableHead className="text-muted-foreground">Stanowisko</TableHead>
           <TableHead className="text-muted-foreground">Telefon</TableHead>
-          <TableHead className="text-muted-foreground">Akcje</TableHead>
+          <TableHead className="text-muted-foreground w-48">Akcje</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody className="block lg:table-row-group">
         {employees.map((employee) => {
           const isEditing = editingId === employee.id;
           const isConfirmingDelete = confirmingDeleteId === employee.id;
           const deliveryMessage = deliveryMessages[employee.id];
 
           return (
-            <TableRow key={employee.id} className="border-border hover:bg-accent/50">
+            <TableRow
+              key={employee.id}
+              className="border-border bg-card hover:bg-accent/50 grid grid-cols-2 py-3 lg:table-row"
+            >
               {isEditing ? (
                 <>
-                  <TableCell>
+                  <TableCell data-label="Imię">
                     <Input
                       className="h-8"
+                      aria-label="Imię pracownika"
                       value={draft.firstName}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, firstName: e.target.value }));
@@ -318,9 +322,10 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                       </p>
                     ) : null}
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Nazwisko">
                     <Input
                       className="h-8"
+                      aria-label="Nazwisko pracownika"
                       value={draft.lastName}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, lastName: e.target.value }));
@@ -335,7 +340,7 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                       </p>
                     ) : null}
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="E-mail" className="col-span-2">
                     <Input
                       className="h-8"
                       type="email"
@@ -346,9 +351,10 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                       aria-label="E-mail pracownika"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Stanowisko">
                     <Input
                       className="h-8"
+                      aria-label="Stanowisko pracownika"
                       value={draft.position}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, position: e.target.value }));
@@ -363,9 +369,10 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                       </p>
                     ) : null}
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Telefon">
                     <Input
                       className="h-8"
+                      aria-label="Telefon pracownika"
                       value={draft.phone}
                       onChange={(e) => {
                         setDraft((prev) => ({ ...prev, phone: e.target.value }));
@@ -373,9 +380,9 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                     />
                     {phoneHint}
                   </TableCell>
-                  <TableCell>
+                  <TableCell data-label="Akcje" className="col-span-2">
                     <div className="flex flex-col gap-1">
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           type="button"
                           size="sm"
@@ -396,15 +403,17 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                 </>
               ) : (
                 <>
-                  <TableCell>{employee.firstName}</TableCell>
-                  <TableCell>{employee.lastName}</TableCell>
-                  <TableCell>{employee.email ?? "—"}</TableCell>
-                  <TableCell>{employee.position}</TableCell>
-                  <TableCell>{employee.phone}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Imię">{employee.firstName}</TableCell>
+                  <TableCell data-label="Nazwisko">{employee.lastName}</TableCell>
+                  <TableCell data-label="E-mail" className="col-span-2">
+                    {employee.email ?? "—"}
+                  </TableCell>
+                  <TableCell data-label="Stanowisko">{employee.position}</TableCell>
+                  <TableCell data-label="Telefon">{employee.phone}</TableCell>
+                  <TableCell data-label="Akcje" className="col-span-2">
                     {isConfirmingDelete ? (
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-muted-foreground text-xs">Czy na pewno usunąć pracownika?</span>
                           <Button
                             type="button"
@@ -434,7 +443,12 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                         <div className="flex flex-wrap gap-2">
                           <Button
                             type="button"
-                            size="sm"
+                            size="icon"
+                            className="size-9"
+                            aria-label={
+                              generatingEmployeeId === employee.id ? "Generowanie podpisów" : "Generuj podpisy"
+                            }
+                            title="Generuj podpisy"
                             variant="outline"
                             disabled={generatingEmployeeId !== null || sendingEmployeeId !== null}
                             onClick={() => {
@@ -442,20 +456,16 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                             }}
                           >
                             {generatingEmployeeId === employee.id ? (
-                              <>
-                                <LoaderCircle className="size-3.5 animate-spin" />
-                                Generowanie...
-                              </>
+                              <LoaderCircle className="size-4 animate-spin" />
                             ) : (
-                              <>
-                                <Download className="size-3.5" />
-                                Generuj podpisy
-                              </>
+                              <Download className="size-4" />
                             )}
                           </Button>
                           <Button
                             type="button"
-                            size="sm"
+                            size="icon"
+                            className="size-9"
+                            aria-label={sendingEmployeeId === employee.id ? "Wysyłanie podpisów" : "Wyślij podpisy"}
                             variant="outline"
                             disabled={
                               !employee.email ||
@@ -471,42 +481,40 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
                                 ? "Dodaj adres e-mail, aby włączyć wysyłkę."
                                 : !emailDeliveryEnabled
                                   ? "Wysyłka e-maili nie jest skonfigurowana."
-                                  : undefined
+                                  : "Wyślij podpisy"
                             }
                           >
                             {sendingEmployeeId === employee.id ? (
-                              <>
-                                <LoaderCircle className="size-3.5 animate-spin" />
-                                Wysyłanie...
-                              </>
+                              <LoaderCircle className="size-4 animate-spin" />
                             ) : (
-                              <>
-                                <Mail className="size-3.5" />
-                                Wyślij podpisy
-                              </>
+                              <Mail className="size-4" />
                             )}
                           </Button>
                           <Button
                             type="button"
-                            size="sm"
+                            size="icon"
+                            className="size-9"
+                            aria-label="Edytuj"
+                            title="Edytuj pracownika"
                             variant="outline"
                             onClick={() => {
                               startEdit(employee);
                             }}
                           >
-                            <Pencil className="size-3.5" />
-                            Edytuj
+                            <Pencil className="size-4" />
                           </Button>
                           <Button
                             type="button"
-                            size="sm"
+                            size="icon"
+                            className="size-9"
+                            aria-label="Usuń"
+                            title="Usuń pracownika"
                             variant="outline"
                             onClick={() => {
                               startDeleteConfirm(employee.id);
                             }}
                           >
-                            <Trash2 className="size-3.5" />
-                            Usuń
+                            <Trash2 className="size-4" />
                           </Button>
                         </div>
                         {signatureErrors[employee.id] ? (

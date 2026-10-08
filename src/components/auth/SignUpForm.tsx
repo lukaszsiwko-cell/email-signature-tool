@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const MIN_PASSWORD_LENGTH = 6;
 const selectBase =
-  "w-full rounded-lg border bg-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 transition-colors";
+  "w-full rounded-lg border bg-muted px-3 py-2 text-foreground focus:outline-none focus:ring-2 transition-colors";
 
 interface DepartmentOption {
   id: string;
@@ -77,14 +77,15 @@ export default function SignUpForm({ serverError, departments }: Props) {
   const passwordHint =
     !errors.password && password.length > 0 && remainingCharacters > 0 ? (
       <p className="mt-1 text-xs text-blue-100/50">
-        Dodaj jeszcze {remainingCharacters} {remainingCharacters === 1 ? "znak" : remainingCharacters < 5 ? "znaki" : "znaków"}
+        Dodaj jeszcze {remainingCharacters}{" "}
+        {remainingCharacters === 1 ? "znak" : remainingCharacters < 5 ? "znaki" : "znaków"}
       </p>
     ) : undefined;
 
   return (
     <form method="POST" action="/api/auth/signup" className="space-y-4" onSubmit={handleSubmit} noValidate>
       <div>
-        <label htmlFor="departmentId" className="mb-1 block text-sm text-blue-100/80">
+        <label htmlFor="departmentId" className="text-muted-foreground mb-1 block text-sm">
           Dział
         </label>
         <select
@@ -97,15 +98,15 @@ export default function SignUpForm({ serverError, departments }: Props) {
           }}
           className={cn(
             selectBase,
-            departmentId ? "text-white" : "text-white/40",
-            errors.departmentId ? "border-red-400/60 focus:ring-red-400" : "focus:ring-primary border-white/20",
+            departmentId ? "text-foreground" : "text-muted-foreground",
+            errors.departmentId ? "border-destructive/60 focus:ring-destructive" : "focus:ring-ring border-border",
           )}
         >
-          <option value="" disabled className="bg-slate-900 text-white">
+          <option value="" disabled className="bg-popover text-muted-foreground">
             Wybierz dział
           </option>
           {departments.map((department) => (
-            <option key={department.id} value={department.id} className="bg-slate-900 text-white">
+            <option key={department.id} value={department.id} className="bg-popover text-popover-foreground">
               {department.name}
             </option>
           ))}

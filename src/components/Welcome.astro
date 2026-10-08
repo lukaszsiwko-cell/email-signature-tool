@@ -6,35 +6,35 @@ const { user } = Astro.locals;
 ---
 
 {user ? (
-  <div class="bg-cosmic min-h-screen w-full">
+  <div class="bg-brand min-h-screen w-full text-foreground">
     <div class="p-4 sm:p-8">
       <Topbar />
 
-      <main class="mx-auto grid max-w-6xl items-center gap-10 py-10 md:grid-cols-[0.9fr_1.1fr] md:gap-16 md:py-20">
+      <main class="mx-auto grid max-w-6xl items-center gap-14 px-4 py-16 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:py-28">
         <section>
           <p class="text-primary mb-4 flex items-center gap-2 text-xs font-semibold uppercase">
             <span class="size-2 rounded-full bg-primary"></span>
             Generator podpisów e-mail
           </p>
-          <h1 class="mb-4 text-4xl leading-tight font-semibold text-white sm:text-5xl">
+          <h1 class="mb-4 max-w-xl text-4xl leading-tight font-semibold text-foreground sm:text-5xl lg:text-6xl">
             Podpisy, które pasują do Twojego zespołu.
           </h1>
-          <p class="max-w-lg text-base leading-relaxed text-blue-100/70">
+          <p class="max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
             Zarządzaj danymi pracowników, dodaj logo działu i przygotuj profesjonalne podpisy do każdej skrzynki.
           </p>
 
           <a
             href="/employees"
-            class="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            class="mt-9 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <Users className="size-4" />
             Zarządzaj pracownikami
             <ArrowRight className="size-4" />
           </a>
 
-          <div class="mt-8 flex max-w-md items-start gap-3 border-t border-white/10 pt-5">
+          <div class="mt-8 flex max-w-md items-start gap-3 border-t border-border pt-5">
             <ShieldCheck className="text-primary mt-0.5 size-5 shrink-0" />
-            <p class="text-sm leading-relaxed text-blue-100/60">
+            <p class="text-sm leading-relaxed text-muted-foreground">
               Dane pracowników i pobrane podpisy są odseparowane dla każdego działu.
             </p>
           </div>
@@ -87,9 +87,7 @@ const { user } = Astro.locals;
     </div>
   </div>
 ) : (
-  <div class="relative min-h-screen w-full overflow-hidden bg-[#101d1a] text-white">
-    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_15%,rgba(16,185,129,0.18),transparent_42%),linear-gradient(135deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-size-[auto,36px_36px]"></div>
-
+  <div class="bg-brand relative min-h-screen w-full overflow-hidden text-foreground">
     <div class="relative z-10 p-4 sm:p-8">
       <Topbar />
 

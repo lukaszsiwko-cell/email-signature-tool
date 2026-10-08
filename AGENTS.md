@@ -29,6 +29,7 @@ Astro 7 SSR starter (React 19 islands, Tailwind 4, Supabase auth, shadcn/ui) dep
 - Path alias `@/*` → `./src/*` (see `@tsconfig.json`).
 - Astro components for static content/layout; React only where interactivity is needed. No Next.js directives (`"use client"`, etc.).
 - Merge Tailwind classes with `cn()` from `@/lib/utils` — never concatenate class strings manually.
+- Public and authenticated home variants share `bg-brand` and semantic colors from `src/styles/global.css`; do not introduce a separate background or palette after login. Reuse `src/components/ui/` primitives. The visual contract is in `context/changes/post-login-signature-home/DESIGN.md`.
 - Add shadcn/ui components with `npx shadcn@latest add [name]` ("new-york" variant).
 - API route handlers use uppercase `GET`/`POST` exports and validate input with `zod`.
 - Husky + lint-staged run `eslint --fix` on `*.{ts,tsx,astro}` and `prettier --write` on `*.{json,css,md}` pre-commit.

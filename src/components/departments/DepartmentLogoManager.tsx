@@ -134,7 +134,7 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
   }
 
   return (
-    <section className="border-border bg-card mb-8 rounded-2xl border p-6 backdrop-blur-sm">
+    <section className="border-border bg-card min-w-0 rounded-lg border p-4 sm:p-6">
       <div className="mb-4">
         <h2 className="text-foreground text-lg font-semibold">Logo działu</h2>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -143,13 +143,9 @@ export default function DepartmentLogoManager({ initialLogoUrl }: DepartmentLogo
       </div>
 
       <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-        <div className="border-border bg-muted overflow-hidden rounded-xl border">
+        <div className="border-border bg-muted overflow-hidden rounded-lg border">
           {initialLogoUrl ? (
-            <img
-              src={initialLogoUrl}
-              alt="Aktualne logo działu"
-              className="bg-muted h-40 w-full object-contain p-4"
-            />
+            <img src={initialLogoUrl} alt="Aktualne logo działu" className="bg-muted h-40 w-full object-contain p-4" />
           ) : (
             <div className="text-muted-foreground flex h-40 items-center justify-center px-4 text-center text-sm">
               Nie dodano jeszcze logo

@@ -561,6 +561,17 @@
 			],
 			"isBackground": false,
 			"problemMatcher": []
+		},
+		{
+			"label": "Verify local UI test backend",
+			"type": "shell",
+			"command": "node.exe",
+			"args": [
+				"-e",
+				"process.loadEnvFile('.dev.vars'); const url = new URL(process.env.SUPABASE_URL); if (!['localhost','127.0.0.1'].includes(url.hostname)) throw new Error('UI fixture requires local Supabase'); console.log('Local Supabase confirmed');"
+			],
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }

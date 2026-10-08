@@ -19,35 +19,49 @@ let loadError: string | null = null;
 if (supabase) {
   try {
     [employees, initialLogoUrl] = await Promise.all([listEmployees(supabase), getDepartmentLogoUrl(supabase)]);
-  } catch (error) {
+  } catch {
     loadError = "Nie udało się wczytać listy pracowników. Spróbuj ponownie później.";
   }
 }
 ---
 
 <Layout title="Pracownicy">
-  <div class="bg-cosmic min-h-screen p-4">
-    <div class="mx-auto max-w-3xl">
+  <div class="employee-workspace min-h-screen bg-background p-4 text-foreground sm:p-8">
+    <div class="mx-auto max-w-screen-2xl">
       <Topbar />
-      <div class="rounded-2xl border border-border bg-card p-8 text-foreground backdrop-blur-xl">
+      <main class="py-6">
         <h1 class="mb-6 text-2xl font-bold text-foreground">Pracownicy</h1>
 
-        <DepartmentLogoManager initialLogoUrl={initialLogoUrl} client:load />
+        <div class="grid items-start gap-6 xl:grid-cols-2">
+          <DepartmentLogoManager initialLogoUrl={initialLogoUrl} client:load />
+          <section
+            class="min-w-0 rounded-lg border border-border bg-card p-4 sm:p-6"
+            aria-labelledby="add-employee-heading"
+          >
+            <h2 id="add-employee-heading" class="mb-4 text-lg font-semibold">
+              Dodaj pracownika
+            </h2>
+            <AddEmployeeForm client:load />
+          </section>
+        </div>
 
-        <AddEmployeeForm client:load />
-
-        <div class="mt-8">
+        <section class="mt-8 min-w-0 border-t border-border pt-6" aria-labelledby="employee-list-heading">
+          <h2 id="employee-list-heading" class="mb-4 text-lg font-semibold">
+            Lista pracowników
+          </h2>
           {loadError ? (
             <p class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {loadError}
             </p>
           ) : employees.length === 0 ? (
-            <p class="text-sm text-muted-foreground">Nie ma jeszcze pracowników. Dodaj pierwszą osobę w formularzu powyżej.</p>
+            <p class="text-sm text-muted-foreground">
+              Nie ma jeszcze pracowników. Dodaj pierwszą osobę w formularzu powyżej.
+            </p>
           ) : (
             <EmployeeTable employees={employees} emailDeliveryEnabled={isEmailDeliveryConfigured()} client:load />
           )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   </div>
 </Layout>

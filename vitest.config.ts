@@ -20,6 +20,8 @@ export default defineConfig({
   test: {
     projects: [
       {
+        extends: true,
+        esbuild: { jsx: "automatic" },
         test: {
           name: "unit",
           environment: "node",
