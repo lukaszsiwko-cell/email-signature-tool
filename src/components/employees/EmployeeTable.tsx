@@ -68,12 +68,14 @@ interface DeliveryMessage {
 
 function getDeliveryErrorMessage(code?: string): string {
   switch (code) {
-    case "E_SMTP_AUTH_FAILED":
-      return "Nie udało się zalogować do Gmaila. Sprawdź konto i hasło aplikacji.";
-    case "E_SMTP_CONNECTION_FAILED":
-      return "Nie udało się połączyć z serwerem Gmail SMTP. Spróbuj ponownie.";
-    case "E_SMTP_SEND_FAILED":
-      return "Gmail odrzucił wiadomość. Sprawdź adres nadawcy i odbiorcy.";
+    case "E_EMAIL_AUTH_FAILED":
+      return "Resend odrzucił klucz API. Sprawdź konfigurację wysyłki.";
+    case "E_EMAIL_CONNECTION_FAILED":
+      return "Nie udało się połączyć z usługą wysyłki. Spróbuj ponownie.";
+    case "E_EMAIL_RATE_LIMITED":
+      return "Przekroczono limit wysyłki. Spróbuj ponownie później.";
+    case "E_EMAIL_SEND_FAILED":
+      return "Resend odrzucił wiadomość. Sprawdź domenę nadawcy i adres odbiorcy.";
     default:
       return "Nie udało się wysłać podpisu e-mailem. Sprawdź konfigurację wysyłki i spróbuj ponownie.";
   }

@@ -153,15 +153,17 @@ const expectedReplacementLogoBody = replacementLogoSvg.toString("base64");
 
 const steps = [
   [
-    "Gmail SMTP receives only recipient, sender, subject, and one-time link",
+    "Resend receives only recipient, sender, subject, and one-time link",
     async () => {
       let sentMessage;
       try {
         await sendSignatureEmail(
           {
-            sendMail: async (message) => {
-              sentMessage = message;
-              return { messageId: "mock-message-id" };
+            emails: {
+              send: async (message) => {
+                sentMessage = message;
+                return { data: { id: "mock-message-id" }, error: null };
+              },
             },
           },
           {
@@ -181,24 +183,26 @@ const steps = [
         return {
           status: valid ? 200 : 500,
           location: "",
-          body: valid ? "Gmail SMTP contract valid" : "invalid email message",
+          body: valid ? "Resend contract valid" : "invalid email message",
         };
       } catch {
-        return { status: 500, location: "", body: "Gmail SMTP call threw" };
+        return { status: 500, location: "", body: "Resend call threw" };
       }
     },
-    { status: 200, bodyIncludes: "Gmail SMTP contract valid" },
+    { status: 200, bodyIncludes: "Resend contract valid" },
   ],
   [
-    "Gmail SMTP rejects an insecure public app URL before sending",
+    "Resend rejects an insecure public app URL before sending",
     async () => {
       let sendCalled = false;
       try {
         await sendSignatureEmail(
           {
-            sendMail: async () => {
-              sendCalled = true;
-              return { messageId: "mock-message-id" };
+            emails: {
+              send: async () => {
+                sendCalled = true;
+                return { data: { id: "mock-message-id" }, error: null };
+              },
             },
           },
           {
@@ -221,15 +225,17 @@ const steps = [
     { status: 200, bodyIncludes: "email HTTPS policy checked" },
   ],
   [
-    "Gmail SMTP rejects missing configuration before sending",
+    "Resend rejects missing configuration before sending",
     async () => {
       let sendCalled = false;
       try {
         await sendSignatureEmail(
           {
-            sendMail: async () => {
-              sendCalled = true;
-              return { messageId: "mock-message-id" };
+            emails: {
+              send: async () => {
+                sendCalled = true;
+                return { data: { id: "mock-message-id" }, error: null };
+              },
             },
           },
           {
@@ -240,23 +246,24 @@ const steps = [
           { to: "employee@example.test", token: "d".repeat(64) },
         );
       } catch (error) {
-        const valid = !sendCalled && error instanceof Error && error.message === "Gmail SMTP is not configured";
+        const valid = !sendCalled && error instanceof Error && error.message === "Resend is not configured";
         return { status: valid ? 200 : 500, location: "", body: valid ? error.message : "invalid config handling" };
       }
       return { status: 500, location: "", body: "missing email configuration was accepted" };
     },
-    { status: 200, bodyIncludes: "Gmail SMTP is not configured" },
+    { status: 200, bodyIncludes: "Resend is not configured" },
   ],
   [
-    "Gmail SMTP errors do not expose provider details",
+    "Resend errors do not expose provider details",
     async () => {
       try {
         await sendSignatureEmail(
           {
-            sendMail: async () => {
-              const error = new Error("private provider diagnostic");
-              error.code = "EAUTH";
-              throw error;
+            emails: {
+              send: async () => ({
+                data: null,
+                error: { statusCode: 401, message: "private provider diagnostic" },
+              }),
             },
           },
           {
@@ -270,14 +277,14 @@ const steps = [
       } catch (error) {
         const valid =
           error instanceof Error &&
-          error.message === "Gmail SMTP rejected the message" &&
-          error.code === "E_SMTP_AUTH_FAILED";
+          error.message === "Resend rejected the message" &&
+          error.code === "E_EMAIL_AUTH_FAILED";
         return { status: valid ? 200 : 500, location: "", body: valid ? error.message : "unsafe network error" };
       }
     },
     {
       status: 200,
-      bodyIncludes: "Gmail SMTP rejected the message",
+      bodyIncludes: "Resend rejected the message",
       bodyExcludes: "private provider diagnostic",
     },
   ],

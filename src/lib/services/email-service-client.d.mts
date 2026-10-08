@@ -1,11 +1,16 @@
 interface EmailTransport {
-  sendMail(message: { from: string; to: string; subject: string; text: string }): Promise<{ messageId?: string }>;
+  emails: {
+    send(message: { from: string; to: string; subject: string; text: string }): Promise<{
+      data: { id?: string } | null;
+      error: { statusCode?: number | null; message?: string } | null;
+    }>;
+  };
 }
 
 interface EmailServiceConfig {
   fromAddress: string;
   publicAppUrl: string;
-  allowLocalHttp: boolean;
+  allowLocalHttp?: boolean;
 }
 
 interface SignatureEmail {

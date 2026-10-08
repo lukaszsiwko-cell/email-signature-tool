@@ -128,27 +128,25 @@ SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_KEY=<anon-key>
 ```
 
-### Gmail SMTP
+### Resend
 
-Signature delivery uses Gmail SMTP through Nodemailer over implicit TLS on `smtp.gmail.com:465`. The Google account must have 2-Step Verification enabled and an [app password](https://myaccount.google.com/apppasswords) created for this app. Use the 16-character app password, not the account password. `EMAIL_FROM` must be the same Gmail address as `GMAIL_SMTP_USERNAME` or a sender alias configured in Gmail. Store these server-only values in `.dev.vars` for local development and as Worker secrets/variables in Cloudflare:
+Signature delivery uses the [Resend SDK over HTTPS](https://resend.com/docs/send-with-cloudflare-workers), without SMTP sockets. Create an API key with sending access and [verify your sending domain](https://resend.com/domains). `EMAIL_FROM` must use that domain, not a `gmail.com` address. Store these server-only values in `.dev.vars` for local development and as Worker secrets/variables in Cloudflare:
 
-| Variable                  | Description                                                                                                                      |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `GMAIL_SMTP_USERNAME`     | Gmail account used to authenticate, for example `team@gmail.com`.                                                                |
-| `GMAIL_SMTP_APP_PASSWORD` | Google app password. Always store as a secret; never commit it.                                                                  |
-| `EMAIL_FROM`              | Sender address matching the Gmail account or one of its configured aliases.                                                      |
-| `PUBLIC_APP_URL`          | Public base URL used to create recipient links; use `http://localhost:4321` locally and the deployed HTTPS origin in production. |
+| Variable         | Description                                                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `RESEND_API_KEY` | Resend API key with sending access. Always store as a secret; never commit it.                                                   |
+| `EMAIL_FROM`     | Sender address on your verified domain, for example `Signatures <signatures@your-domain.com>`.                                   |
+| `PUBLIC_APP_URL` | Public base URL used to create recipient links; use `http://localhost:4321` locally and the deployed HTTPS origin in production. |
 
 Example `.dev.vars` entries:
 
 ```dotenv
-GMAIL_SMTP_USERNAME=team@gmail.com
-GMAIL_SMTP_APP_PASSWORD=your-16-character-app-password
-EMAIL_FROM=team@gmail.com
+RESEND_API_KEY=your-resend-api-key
+EMAIL_FROM="Signatures <signatures@your-domain.com>"
 PUBLIC_APP_URL=http://localhost:4321
 ```
 
-The email contains a one-time download link, not the generated signature files. If configuration is missing or Gmail rejects the send, the app revokes the unused delivery token and reports a safe, actionable error.
+The email contains a one-time download link, not the generated signature files. If configuration is missing or Resend rejects the send, the app revokes the unused delivery token and reports a safe, actionable error. `onboarding@resend.dev` is only for testing with the recipient allowed by your Resend account, not for production delivery to employees.
 
 ### Email confirmation in local development
 
@@ -182,19 +180,19 @@ npm run build
 npx wrangler deploy
 ```
 
-Set `SUPABASE_URL`, `SUPABASE_KEY`, `GMAIL_SMTP_USERNAME`, `GMAIL_SMTP_APP_PASSWORD`, `EMAIL_FROM`, and `PUBLIC_APP_URL` for the Production Worker. Store `SUPABASE_URL`, `SUPABASE_KEY`, and `GMAIL_SMTP_APP_PASSWORD` as secrets; configure the remaining values as variables.
+Set `SUPABASE_URL`, `SUPABASE_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`, and `PUBLIC_APP_URL` for the Production Worker. Store `SUPABASE_URL`, `SUPABASE_KEY`, and `RESEND_API_KEY` as secrets; configure the remaining values as variables.
 
 ```bash
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_KEY
-npx wrangler secret put GMAIL_SMTP_APP_PASSWORD
+npx wrangler secret put RESEND_API_KEY
 ```
 
 ### Automatic deploy on push to `master`
 
 This project uses **Cloudflare Workers Builds' native Git integration** for auto-deploy — configured once in the Cloudflare dashboard (Workers & Pages → this Worker → Settings → Build → Connect to Git), not GitHub Actions. GitHub Actions (`.github/workflows/ci.yml`) only runs lint/`astro check`/build/smoke and does not deploy.
 
-All six values must additionally be configured in the Cloudflare dashboard (Settings → Variables and Secrets) for the Production environment — these are separate from Wrangler CLI values and GitHub Actions secrets. `SUPABASE_URL`, `SUPABASE_KEY`, and `GMAIL_SMTP_APP_PASSWORD` are **Secrets**; `GMAIL_SMTP_USERNAME`, `EMAIL_FROM`, and `PUBLIC_APP_URL` are regular variables. Gmail does not use a Cloudflare `send_email` binding.
+Configure these five values for the deployed Worker using Wrangler or the Cloudflare dashboard (Settings → Variables and Secrets). Production runtime values are separate from local `.dev.vars` and GitHub Actions secrets. `SUPABASE_URL`, `SUPABASE_KEY`, and `RESEND_API_KEY` are **Secrets**; `EMAIL_FROM` and `PUBLIC_APP_URL` are regular variables. Resend does not use a Cloudflare `send_email` binding.
 
 ### Post-deploy one-off: backfilling `profiles` for pre-existing accounts
 
