@@ -37,7 +37,11 @@ export const POST: APIRoute = async (context) => {
 
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(parsed.data.token));
   const tokenHash = toHex(new Uint8Array(digest));
-  const { data, error } = await supabase.rpc("redeem_signature_delivery", { p_token_hash: tokenHash });
+  const rpcResult: unknown = await supabase.rpc("redeem_signature_delivery", { p_token_hash: tokenHash });
+  if (!rpcResult || typeof rpcResult !== "object" || !("data" in rpcResult) || !("error" in rpcResult)) {
+    return jsonResponse({ error: "Download service is unavailable." }, 503);
+  }
+  const { data, error } = rpcResult;
 
   if (error) {
     return jsonResponse({ error: "Download service is unavailable." }, 503);

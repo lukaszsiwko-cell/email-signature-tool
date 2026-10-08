@@ -1,9 +1,17 @@
 export async function sendSignatureEmail(emailTransport, config, message) {
-  if (!emailTransport || !config.fromAddress || !config.publicAppUrl) {
+  const sendEmail = emailTransport?.emails?.send;
+
+  if (!sendEmail || !config?.fromAddress || !config?.publicAppUrl) {
     throw new Error("Resend is not configured");
   }
 
-  const appUrl = new URL(config.publicAppUrl);
+  let appUrl;
+  try {
+    appUrl = new URL(config.publicAppUrl);
+  } catch {
+    throw new Error("Public app URL must use HTTPS");
+  }
+
   const isLocalHttp =
     config.allowLocalHttp && appUrl.protocol === "http:" && ["localhost", "127.0.0.1"].includes(appUrl.hostname);
   if (appUrl.protocol !== "https:" && !isLocalHttp) {
@@ -11,11 +19,13 @@ export async function sendSignatureEmail(emailTransport, config, message) {
   }
 
   const downloadUrl = new URL("/download-signatures", appUrl);
-  downloadUrl.hash = message.token;
+  if (message?.token) {
+    downloadUrl.hash = message.token;
+  }
 
   let result;
   try {
-    result = await emailTransport.emails.send({
+    result = await sendEmail({
       from: config.fromAddress,
       to: message.to,
       subject: "Pliki z podpisem e-mail",
@@ -27,8 +37,8 @@ export async function sendSignatureEmail(emailTransport, config, message) {
     throw wrappedError;
   }
 
-  if (result.error || !result.data?.id) {
-    const status = result.error?.statusCode;
+  if (result?.error || !result?.data?.id) {
+    const status = result?.error?.statusCode;
     const wrappedError = new Error("Resend rejected the message");
     wrappedError.code =
       status === 401 ? "E_EMAIL_AUTH_FAILED" : status === 429 ? "E_EMAIL_RATE_LIMITED" : "E_EMAIL_SEND_FAILED";

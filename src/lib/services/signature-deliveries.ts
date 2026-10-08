@@ -27,7 +27,7 @@ export async function createSignatureDelivery(
   const expiresAt = new Date(Date.now() + DELIVERY_TTL_MS).toISOString();
 
   const { error } = await supabase.from("signature_deliveries").insert({
-    department_id: (await getEmployeeDepartmentId(supabase, employee.id)),
+    department_id: await getEmployeeDepartmentId(supabase, employee.id),
     employee_id: employee.id,
     token_hash: tokenHash,
     artifact_bundle: artifactBundle,
@@ -50,11 +50,7 @@ export async function revokeSignatureDelivery(supabase: SupabaseClient, token: s
 }
 
 async function getEmployeeDepartmentId(supabase: SupabaseClient, employeeId: string): Promise<string> {
-  const { data, error } = await supabase
-    .from("employees")
-    .select("department_id")
-    .eq("id", employeeId)
-    .single();
+  const { data, error } = await supabase.from("employees").select("department_id").eq("id", employeeId).single();
 
   if (error) {
     throw new Error(error.message);

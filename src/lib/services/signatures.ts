@@ -52,7 +52,9 @@ function createHtml(employee: EmployeeDTO, logo: DepartmentLogoAsset | null): st
 function createThunderbirdInstaller(signatureHtml: string): string {
   const signatureHtmlBase64 = encodeBase64(new TextEncoder().encode(signatureHtml));
 
-  return "\uFEFF" + String.raw`$ErrorActionPreference = 'Stop'
+  return (
+    "\uFEFF" +
+    String.raw`$ErrorActionPreference = 'Stop'
 $signatureHtml = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${signatureHtmlBase64}'))
 while (Get-Process -Name 'thunderbird' -ErrorAction SilentlyContinue) {
   Write-Host 'Zapisz swoją pracę i zamknij Thunderbirda przed kontynuowaniem.'
@@ -169,7 +171,8 @@ try {
 
 Write-Host ('Zainstalowano podpis dla konta: {0}.' -f $identities[$identityChoice - 1].Label)
 Write-Host ('Kopia zapasowa została zapisana w: {0}.' -f $backupDirectory)
-`;
+`
+  );
 }
 
 function createThunderbirdLauncher(): string {

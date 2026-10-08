@@ -48,7 +48,7 @@ export const POST: APIRoute = async (context) => {
         error instanceof Error && "code" in error && typeof error.code === "string" && /^E_[A-Z0-9_]+$/.test(error.code)
           ? error.code
           : "UNKNOWN";
-      console.error("Signature email send rejected", code);
+
       return jsonResponse({ error: "Unable to send signature email", code }, 502);
     }
 
