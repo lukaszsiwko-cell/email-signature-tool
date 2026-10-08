@@ -17,8 +17,8 @@ export async function sendSignatureEmail(emailTransport, config, message) {
     await emailTransport.sendMail({
       from: config.fromAddress,
       to: message.to,
-      subject: "Your email signature files",
-      text: `Download your email signature files using this one-time link:\n\n${downloadUrl}\n\nThe link expires in 24 hours. Open it and choose Get signature files to download the Outlook and Thunderbird files.`,
+      subject: "Pliki z podpisem e-mail",
+      text: `Pobierz pliki z podpisem e-mail, korzystając z jednorazowego linku:\n\n${downloadUrl}\n\nLink wygaśnie za 24 godziny. Otwórz go i wybierz „Pobierz pliki z podpisem”, aby pobrać pliki dla Outlooka i Thunderbirda.`,
     });
   } catch (error) {
     const transportCode = error && typeof error === "object" && "code" in error ? error.code : undefined;

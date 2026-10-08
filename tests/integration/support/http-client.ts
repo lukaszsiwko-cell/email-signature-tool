@@ -1,7 +1,7 @@
 const DEFAULT_BASE_URL = "http://localhost:4321";
 const DEPARTMENT_OPTION_PATTERN = /<option value="([0-9a-fA-F-]{36})"[^>]*>([^<]+)<\/option>/g;
 
-export const BASE_URL = process.env.BASE_URL ?? DEFAULT_BASE_URL;
+export const BASE_URL = process.env.INTEGRATION_BASE_URL ?? process.env.BASE_URL ?? DEFAULT_BASE_URL;
 
 export interface SeededDepartment {
   id: string;

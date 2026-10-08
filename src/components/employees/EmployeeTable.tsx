@@ -138,7 +138,11 @@ export default function EmployeeTable({ employees, emailDeliveryEnabled }: Emplo
       });
 
       if (!response.ok) {
-        setRowError("Nie udało się zapisać zmian. Sprawdź dane i spróbuj ponownie.");
+        setRowError(
+          response.status === 409
+            ? "Pracownik z tym adresem e-mail już istnieje w tym dziale."
+            : "Nie udało się zapisać zmian. Sprawdź dane i spróbuj ponownie.",
+        );
         setIsSaving(false);
         return;
       }

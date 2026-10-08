@@ -13,6 +13,52 @@ interface EmployeeRow {
   created_at: string;
 }
 
+interface EmployeeEmailRow {
+  id: string;
+  email: string | null;
+}
+
+interface EmployeeDepartmentRow {
+  department_id: string;
+  email: string | null;
+}
+
+export class DuplicateEmployeeEmailError extends Error {
+  constructor() {
+    super("Taki adres e-mail jest już używany w tym dziale.");
+    this.name = "DuplicateEmployeeEmailError";
+  }
+}
+
+function isEmployeeDepartmentRow(value: unknown): value is EmployeeDepartmentRow {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "department_id" in value &&
+    typeof value.department_id === "string" &&
+    "email" in value &&
+    (typeof value.email === "string" || value.email === null)
+  );
+}
+
+async function ensureEmployeeEmailAvailable(
+  supabase: SupabaseClient,
+  departmentId: string,
+  email: string,
+  excludedEmployeeId?: string,
+): Promise<void> {
+  let query = supabase.from("employees").select("id, email").eq("department_id", departmentId);
+  if (excludedEmployeeId) query = query.neq("id", excludedEmployeeId);
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const employees = data as EmployeeEmailRow[];
+  const duplicate = employees.some((employee) => employee.email?.trim().toLowerCase() === normalizedEmail);
+  if (duplicate) throw new DuplicateEmployeeEmailError();
+}
+
 function toDTO(row: EmployeeRow): EmployeeDTO {
   return {
     id: row.id,
@@ -87,13 +133,26 @@ export async function createEmployee(supabase: SupabaseClient, input: CreateEmpl
     throw new Error("Your account is missing a department profile. Contact an administrator to restore access.");
   }
 
+  const profileData: unknown = profile;
+  if (
+    typeof profileData !== "object" ||
+    profileData === null ||
+    !("department_id" in profileData) ||
+    typeof profileData.department_id !== "string"
+  ) {
+    throw new Error("Your account is missing a department profile. Contact an administrator to restore access.");
+  }
+  const departmentId = profileData.department_id;
+
+  await ensureEmployeeEmailAvailable(supabase, departmentId, input.email);
+
   const { data, error } = await supabase
     .from("employees")
     .insert({
-      department_id: profile.department_id,
+      department_id: departmentId,
       first_name: input.firstName,
       last_name: input.lastName,
-      email: input.email?.trim() || null,
+      email: input.email.trim(),
       position: input.position,
       phone: input.phone,
     })
@@ -101,6 +160,7 @@ export async function createEmployee(supabase: SupabaseClient, input: CreateEmpl
     .single();
 
   if (error) {
+    if (error.code === "23505") throw new DuplicateEmployeeEmailError();
     throw new Error(error.message);
   }
 
@@ -119,12 +179,32 @@ export async function updateEmployee(
   id: string,
   input: UpdateEmployeeInput,
 ): Promise<EmployeeDTO | null> {
+  const normalizedInputEmail = input.email?.trim();
+  const emailForUpdate = normalizedInputEmail === "" ? null : (normalizedInputEmail ?? null);
+
+  if (typeof input.email === "string" && input.email.trim()) {
+    const { data: existingEmployee, error: existingEmployeeError } = await supabase
+      .from("employees")
+      .select("department_id, email")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (existingEmployeeError) throw new Error(existingEmployeeError.message);
+
+    if (
+      isEmployeeDepartmentRow(existingEmployee) &&
+      existingEmployee.email?.trim().toLowerCase() !== input.email.trim().toLowerCase()
+    ) {
+      await ensureEmployeeEmailAvailable(supabase, existingEmployee.department_id, input.email, id);
+    }
+  }
+
   const { data, error } = await supabase
     .from("employees")
     .update({
       first_name: input.firstName,
       last_name: input.lastName,
-      ...(input.email !== undefined ? { email: input.email?.trim() || null } : {}),
+      ...(input.email !== undefined ? { email: emailForUpdate } : {}),
       position: input.position,
       phone: input.phone,
     })
@@ -133,6 +213,7 @@ export async function updateEmployee(
     .maybeSingle();
 
   if (error) {
+    if (error.code === "23505") throw new DuplicateEmployeeEmailError();
     throw new Error(error.message);
   }
 

@@ -40,13 +40,13 @@ function encodeBase64(bytes: Uint8Array): string {
 function createHtml(employee: EmployeeDTO, logo: DepartmentLogoAsset | null): string {
   const displayName = `${employee.firstName} ${employee.lastName}`.trim();
   const logoHtml = logo
-    ? `<tr><td style="padding:0 0 12px"><img src="data:${logo.contentType};base64,${encodeBase64(logo.data)}" alt="Company logo" style="display:block;max-width:180px;max-height:64px;width:auto;height:auto"></td></tr>`
+    ? `<tr><td style="padding:0 0 12px"><img src="data:${logo.contentType};base64,${encodeBase64(logo.data)}" alt="Logo firmy" style="display:block;max-width:180px;max-height:64px;width:auto;height:auto"></td></tr>`
     : "";
   const phoneHtml = employee.phone
     ? `<tr><td style="padding:0;color:#555;font:14px Arial,sans-serif">${escapeHtml(employee.phone)}</td></tr>`
     : "";
 
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Email signature</title></head><body><table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif"><tbody>${logoHtml}<tr><td style="padding:0 0 4px;color:#222;font-size:16px;font-weight:bold">${escapeHtml(displayName)}</td></tr><tr><td style="padding:0 0 4px;color:#555;font-size:14px">${escapeHtml(employee.position)}</td></tr>${phoneHtml}</tbody></table></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Podpis e-mail</title></head><body><table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif"><tbody>${logoHtml}<tr><td style="padding:0 0 4px;color:#222;font-size:16px;font-weight:bold">${escapeHtml(displayName)}</td></tr><tr><td style="padding:0 0 4px;color:#555;font-size:14px">${escapeHtml(employee.position)}</td></tr>${phoneHtml}</tbody></table></body></html>`;
 }
 
 function createThunderbirdInstaller(signatureHtml: string): string {
@@ -55,13 +55,13 @@ function createThunderbirdInstaller(signatureHtml: string): string {
   return String.raw`$ErrorActionPreference = 'Stop'
 $signatureHtml = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${signatureHtmlBase64}'))
 while (Get-Process -Name 'thunderbird' -ErrorAction SilentlyContinue) {
-  Write-Host 'Save your work and close Thunderbird before continuing.'
-  Read-Host 'Press Enter to check again, or Ctrl+C to cancel' | Out-Null
+  Write-Host 'Zapisz swoją pracę i zamknij Thunderbirda przed kontynuowaniem.'
+  Read-Host 'Naciśnij Enter, aby sprawdzić ponownie, lub Ctrl+C, aby anulować' | Out-Null
 }
 
 $thunderbirdRoot = Join-Path $env:APPDATA 'Thunderbird'
 $profilesIni = Join-Path $thunderbirdRoot 'profiles.ini'
-if (-not (Test-Path -LiteralPath $profilesIni -PathType Leaf)) { throw 'Thunderbird profiles.ini was not found.' }
+if (-not (Test-Path -LiteralPath $profilesIni -PathType Leaf)) { throw 'Nie znaleziono pliku profiles.ini Thunderbirda.' }
 
 $sections = @{}
 $currentSection = $null
@@ -88,16 +88,16 @@ foreach ($sectionName in $sections.Keys) {
     $profiles += [PSCustomObject]@{ Name = $section['Name']; Path = $profilePath; Default = ($section['Default'] -eq '1') }
   }
 }
-if ($profiles.Count -eq 0) { throw 'No Thunderbird profile with prefs.js was found.' }
+if ($profiles.Count -eq 0) { throw 'Nie znaleziono profilu Thunderbirda z plikiem prefs.js.' }
 
-Write-Host 'Choose a Thunderbird profile:'
+Write-Host 'Wybierz profil Thunderbirda:'
 for ($index = 0; $index -lt $profiles.Count; $index++) {
   $label = if ($profiles[$index].Name) { $profiles[$index].Name } else { $profiles[$index].Path }
-  $defaultLabel = if ($profiles[$index].Default) { ' (default)' } else { '' }
+  $defaultLabel = if ($profiles[$index].Default) { ' (domyślny)' } else { '' }
   Write-Host ('[{0}] {1}{2}' -f ($index + 1), $label, $defaultLabel)
 }
 $profileChoice = 0
-if (-not [int]::TryParse((Read-Host 'Profile number'), [ref]$profileChoice) -or $profileChoice -lt 1 -or $profileChoice -gt $profiles.Count) { throw 'Invalid profile selection; no changes were made.' }
+if (-not [int]::TryParse((Read-Host 'Numer profilu'), [ref]$profileChoice) -or $profileChoice -lt 1 -or $profileChoice -gt $profiles.Count) { throw 'Nieprawidłowy wybór profilu. Nie wprowadzono żadnych zmian.' }
 $profile = $profiles[$profileChoice - 1]
 $prefsPath = Join-Path $profile.Path 'prefs.js'
 $prefsText = [System.IO.File]::ReadAllText($prefsPath)
@@ -110,7 +110,7 @@ function Get-PrefString([string]$Name, [string]$Text) {
 }
 
 $accountKeys = Get-PrefString 'mail.accountmanager.accounts' $prefsText
-if (-not $accountKeys) { throw 'No Thunderbird accounts were found in the selected profile.' }
+if (-not $accountKeys) { throw 'Nie znaleziono kont Thunderbirda w wybranym profilu.' }
 $identities = @()
 foreach ($accountKey in ($accountKeys -split ',' | Where-Object { $_ })) {
   $identityKeys = Get-PrefString ('mail.account.{0}.identities' -f $accountKey) $prefsText
@@ -121,12 +121,12 @@ foreach ($accountKey in ($accountKeys -split ',' | Where-Object { $_ })) {
     $identities += [PSCustomObject]@{ Key = $identityKey; Label = $label }
   }
 }
-if ($identities.Count -eq 0) { throw 'No Thunderbird identities were found; no changes were made.' }
+if ($identities.Count -eq 0) { throw 'Nie znaleziono tożsamości Thunderbirda. Nie wprowadzono żadnych zmian.' }
 
-Write-Host 'Choose the account for this signature:'
+Write-Host 'Wybierz konto dla tego podpisu:'
 for ($index = 0; $index -lt $identities.Count; $index++) { Write-Host ('[{0}] {1}' -f ($index + 1), $identities[$index].Label) }
 $identityChoice = 0
-if (-not [int]::TryParse((Read-Host 'Account number'), [ref]$identityChoice) -or $identityChoice -lt 1 -or $identityChoice -gt $identities.Count) { throw 'Invalid account selection; no changes were made.' }
+if (-not [int]::TryParse((Read-Host 'Numer konta'), [ref]$identityChoice) -or $identityChoice -lt 1 -or $identityChoice -gt $identities.Count) { throw 'Nieprawidłowy wybór konta. Nie wprowadzono żadnych zmian.' }
 $identityKey = $identities[$identityChoice - 1].Key
 
 $timestamp = Get-Date -Format 'yyyyMMddHHmmss'
@@ -167,8 +167,8 @@ try {
   throw
 }
 
-Write-Host ('Signature installed for {0}.' -f $identities[$identityChoice - 1].Label)
-Write-Host ('Backup saved to {0}.' -f $backupDirectory)
+Write-Host ('Zainstalowano podpis dla konta: {0}.' -f $identities[$identityChoice - 1].Label)
+Write-Host ('Kopia zapasowa została zapisana w: {0}.' -f $backupDirectory)
 `;
 }
 
@@ -176,7 +176,7 @@ function createThunderbirdLauncher(): string {
   return String.raw`@echo off
 setlocal
 set "THUNDERBIRD_INSTALLER=%~dpn0.ps1"
-powershell.exe -NoProfile -Command "$ErrorActionPreference = 'Stop'; $policies = @(Get-ExecutionPolicy -List); $groupPolicy = @($policies | Where-Object { $_.Scope -in @('MachinePolicy', 'UserPolicy') -and $_.ExecutionPolicy -ne 'Undefined' }); $blockedPolicy = @($groupPolicy | Where-Object { $_.ExecutionPolicy -in @('Restricted', 'AllSigned') }); if ($blockedPolicy.Count -gt 0) { throw 'PowerShell script execution is restricted by your organization. Contact IT.' }; if ($groupPolicy.Count -eq 0) { Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned }; $installer = $env:THUNDERBIRD_INSTALLER; if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Keep the launcher next to its matching .ps1 installer.' }; Unblock-File -LiteralPath $installer; & $installer"
+powershell.exe -NoProfile -Command "$ErrorActionPreference = 'Stop'; $policies = @(Get-ExecutionPolicy -List); $groupPolicy = @($policies | Where-Object { $_.Scope -in @('MachinePolicy', 'UserPolicy') -and $_.ExecutionPolicy -ne 'Undefined' }); $blockedPolicy = @($groupPolicy | Where-Object { $_.ExecutionPolicy -in @('Restricted', 'AllSigned') }); if ($blockedPolicy.Count -gt 0) { throw 'Uruchamianie skryptów PowerShell jest ograniczone przez organizację. Skontaktuj się z działem IT.' }; if ($groupPolicy.Count -eq 0) { Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned }; $installer = $env:THUNDERBIRD_INSTALLER; if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Umieść plik uruchamiający obok odpowiadającego mu instalatora .ps1.' }; Unblock-File -LiteralPath $installer; & $installer"
 set "EXIT_CODE=%ERRORLEVEL%"
 pause
 exit /b %EXIT_CODE%

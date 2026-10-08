@@ -14,7 +14,7 @@ export interface EmployeeDTO {
 export interface CreateEmployeeInput {
   firstName: string;
   lastName: string;
-  email?: string;
+  email: string;
   position: string;
   phone: string;
 }

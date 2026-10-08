@@ -1,17 +1,14 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
-import { listEmployees, createEmployee } from "@/lib/services/employees";
+import { DuplicateEmployeeEmailError, listEmployees, createEmployee } from "@/lib/services/employees";
 
 export const prerender = false;
 
 const createEmployeeSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
-  email: z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
-    z.string().trim().max(254).pipe(z.email("Enter a valid email address")).optional(),
-  ),
+  email: z.string().trim().min(1, "Email is required").max(254).pipe(z.email("Enter a valid email address")),
   position: z.string().trim().min(1, "Position is required"),
   // Optional and permissive per the PRD's warn-don't-block rule — shape is
   // only validated on the client (as a non-blocking hint), never enforced here.
@@ -95,6 +92,12 @@ export const POST: APIRoute = async (context) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    if (error instanceof DuplicateEmployeeEmailError) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

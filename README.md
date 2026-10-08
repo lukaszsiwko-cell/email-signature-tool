@@ -1,6 +1,6 @@
 # Email signature Tool
 
-![](./public/template.png)
+![Przykładowa wiadomość z podpisem e-mail pracownika](./public/email-signature-preview.svg)
 
 A modern, opinionated starter template for building fast, accessible web applications.
 

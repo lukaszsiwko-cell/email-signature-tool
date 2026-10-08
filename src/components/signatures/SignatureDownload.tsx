@@ -12,7 +12,9 @@ function downloadArtifact(contents: string, filename: string, contentType: strin
   document.body.append(link);
   link.click();
   link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  window.setTimeout(() => {
+    URL.revokeObjectURL(objectUrl);
+  }, 0);
 }
 
 export default function SignatureDownload() {
@@ -23,7 +25,7 @@ export default function SignatureDownload() {
   async function redeem() {
     const token = window.location.hash.slice(1);
     if (!/^[0-9a-f]{64}$/.test(token)) {
-      setMessage("This download link is unavailable or expired.");
+      setMessage("Ten link do pobrania jest niedostępny lub wygasł.");
       return;
     }
 
@@ -42,14 +44,14 @@ export default function SignatureDownload() {
         typeof body.thunderbirdInstaller !== "string" ||
         typeof body.thunderbirdLauncher !== "string"
       ) {
-        setMessage("This download link is unavailable or expired.");
+        setMessage("Ten link do pobrania jest niedostępny lub wygasł.");
         return;
       }
 
       setArtifacts(body as SignatureArtifactsDTO);
       window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
     } catch {
-      setMessage("The download service is unavailable. Try again later.");
+      setMessage("Usługa pobierania jest niedostępna. Spróbuj ponownie później.");
     } finally {
       setIsRedeeming(false);
     }
@@ -57,50 +59,64 @@ export default function SignatureDownload() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl items-center justify-center p-4">
-      <section className="w-full rounded-xl border border-border bg-card p-8 text-foreground shadow-xl">
-        <h1 className="mb-3 text-2xl font-bold">Email signatures</h1>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Retrieve the signature files for your email account. The link can only be used once.
+      <section className="border-border bg-card text-foreground w-full rounded-xl border p-8 shadow-xl">
+        <h1 className="mb-3 text-2xl font-bold">Podpisy e-mail</h1>
+        <p className="text-muted-foreground mb-6 text-sm">
+          Pobierz pliki z podpisem do swojej poczty. Link można wykorzystać tylko raz.
         </p>
 
         {artifacts ? (
           <div className="flex flex-col gap-3">
             <Button
               type="button"
-              onClick={() => downloadArtifact(artifacts.outlookHtml, "new-outlook-signature.html", "text/html;charset=utf-8")}
+              onClick={() => {
+                downloadArtifact(artifacts.outlookHtml, "podpis-nowy-outlook.html", "text/html;charset=utf-8");
+              }}
             >
               <Download className="size-4" />
-              Download New Outlook signature
+              Pobierz podpis dla nowego Outlooka
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() =>
-                downloadArtifact(artifacts.thunderbirdInstaller, "thunderbird-installer.ps1", "text/plain;charset=utf-8")
-              }
+              onClick={() => {
+                downloadArtifact(
+                  artifacts.thunderbirdInstaller,
+                  "instalator-thunderbird.ps1",
+                  "text/plain;charset=utf-8",
+                );
+              }}
             >
               <Download className="size-4" />
-              Download Thunderbird installer
+              Pobierz instalator Thunderbirda
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={() =>
-                downloadArtifact(artifacts.thunderbirdLauncher, "thunderbird-installer.cmd", "text/plain;charset=utf-8")
-              }
+              onClick={() => {
+                downloadArtifact(
+                  artifacts.thunderbirdLauncher,
+                  "uruchom-instalator-thunderbird.cmd",
+                  "text/plain;charset=utf-8",
+                );
+              }}
             >
               <Download className="size-4" />
-              Download Thunderbird launcher
+              Pobierz plik uruchamiający instalator
             </Button>
           </div>
         ) : (
           <Button type="button" disabled={isRedeeming} onClick={() => void redeem()}>
             {isRedeeming ? <LoaderCircle className="size-4 animate-spin" /> : <Download className="size-4" />}
-            {isRedeeming ? "Checking link..." : "Get signature files"}
+            {isRedeeming ? "Sprawdzanie linku..." : "Pobierz pliki z podpisem"}
           </Button>
         )}
 
-        {message ? <p className="mt-4 text-sm text-destructive" role="alert">{message}</p> : null}
+        {message ? (
+          <p className="text-destructive mt-4 text-sm" role="alert">
+            {message}
+          </p>
+        ) : null}
       </section>
     </main>
   );

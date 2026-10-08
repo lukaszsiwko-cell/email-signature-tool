@@ -133,7 +133,7 @@ const editedFirstName = `SmokeEdited-${runId}`;
 // steps can target the real id without hardcoding it.
 const state = {
   employeeId: null,
-  optionalEmailEmployeeId: null,
+  emailChangeEmployeeId: null,
   signatureEmployeeAId: null,
   signatureEmployeeBId: null,
   signatureDownloadToken: "",
@@ -354,42 +354,70 @@ const steps = [
     { status: 201, bodyIncludes: `smoke-${runId}@example.test` },
   ],
   [
-    "add employee without email",
-    async () => {
-      const res = await request("/api/employees", {
-        method: "POST",
-        json: { firstName: "Smoke", lastName: `MissingEmail-${runId}`, position: "Tester", phone: "1" },
-      });
-      const employee = parseJson(res.body);
-      if (res.status === 201) state.optionalEmailEmployeeId = employee?.id ?? null;
-      const valid = res.status === 201 && employee?.email === null;
-      return { ...res, status: valid ? 201 : res.status === 201 ? 500 : res.status };
-    },
-    { status: 201, bodyIncludes: '"email":null' },
-  ],
-  [
-    "employee without email can be assigned one",
+    "add employee rejects duplicate email regardless of case",
     () =>
-      request(`/api/employees/${state.optionalEmailEmployeeId}`, {
-        method: "PUT",
+      request("/api/employees", {
+        method: "POST",
         json: {
           firstName: "Smoke",
-          lastName: `MissingEmail-${runId}`,
-          email: `optional-${runId}@example.test`,
+          lastName: `Duplicate-${runId}`,
+          email: `SMOKE-${runId}@EXAMPLE.TEST`,
           position: "Tester",
           phone: "1",
         },
       }),
-    { status: 200, bodyIncludes: `optional-${runId}@example.test` },
+    { status: 409, bodyIncludes: "Taki adres e-mail jest już używany w tym dziale." },
+  ],
+  [
+    "add employee rejects missing email",
+    () =>
+      request("/api/employees", {
+        method: "POST",
+        json: { firstName: "Smoke", lastName: `MissingEmail-${runId}`, position: "Tester", phone: "1" },
+      }),
+    { status: 400, bodyIncludes: "Validation failed" },
+  ],
+  [
+    "add employee with email that can later be cleared",
+    async () => {
+      const res = await request("/api/employees", {
+        method: "POST",
+        json: {
+          firstName: "Smoke",
+          lastName: `EmailChange-${runId}`,
+          email: `email-change-${runId}@example.test`,
+          position: "Tester",
+          phone: "1",
+        },
+      });
+      if (res.status === 201) state.emailChangeEmployeeId = parseJson(res.body)?.id ?? null;
+      return res;
+    },
+    { status: 201, bodyIncludes: `email-change-${runId}@example.test` },
+  ],
+  [
+    "employee cannot be changed to an email already in use",
+    () =>
+      request(`/api/employees/${state.emailChangeEmployeeId}`, {
+        method: "PUT",
+        json: {
+          firstName: "Smoke",
+          lastName: `EmailChange-${runId}`,
+          email: `smoke-${runId}@example.test`,
+          position: "Tester",
+          phone: "1",
+        },
+      }),
+    { status: 409, bodyIncludes: "Taki adres e-mail jest już używany w tym dziale." },
   ],
   [
     "employee email can be cleared",
     () =>
-      request(`/api/employees/${state.optionalEmailEmployeeId}`, {
+      request(`/api/employees/${state.emailChangeEmployeeId}`, {
         method: "PUT",
         json: {
           firstName: "Smoke",
-          lastName: `MissingEmail-${runId}`,
+          lastName: `EmailChange-${runId}`,
           email: "",
           position: "Tester",
           phone: "1",
@@ -839,8 +867,8 @@ const steps = [
     { status: 200, bodyIncludes: "Nie dodano jeszcze logo" },
   ],
   [
-    "first user deletes the optional-email employee",
-    () => request(`/api/employees/${state.optionalEmailEmployeeId}`, { method: "DELETE" }),
+    "first user deletes the employee with cleared email",
+    () => request(`/api/employees/${state.emailChangeEmployeeId}`, { method: "DELETE" }),
     { status: 204 },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],

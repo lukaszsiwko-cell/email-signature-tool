@@ -38,7 +38,8 @@ export default function AddEmployeeForm() {
     const next: FormErrors = {};
     if (!firstName.trim()) next.firstName = "Podaj imię";
     if (!lastName.trim()) next.lastName = "Podaj nazwisko";
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = "Wpisz prawidłowy adres e-mail";
+    if (!email.trim()) next.email = "Podaj adres e-mail";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = "Wpisz prawidłowy adres e-mail";
     if (!position.trim()) next.position = "Podaj stanowisko";
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -59,11 +60,15 @@ export default function AddEmployeeForm() {
       const response = await fetch("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email: email.trim() || undefined, position, phone }),
+        body: JSON.stringify({ firstName, lastName, email: email.trim(), position, phone }),
       });
 
       if (!response.ok) {
-        setServerError("Nie udało się dodać pracownika. Sprawdź dane i spróbuj ponownie.");
+        setServerError(
+          response.status === 409
+            ? "Pracownik z tym adresem e-mail już istnieje w tym dziale."
+            : "Nie udało się dodać pracownika. Sprawdź dane i spróbuj ponownie.",
+        );
         setIsSubmitting(false);
         return;
       }
@@ -132,11 +137,12 @@ export default function AddEmployeeForm() {
 
       <div>
         <Label htmlFor="email" className="text-muted-foreground mb-1 block text-sm">
-          E-mail (opcjonalnie)
+          E-mail
         </Label>
         <Input
           id="email"
           type="email"
+          required
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase";
-import { updateEmployee, deleteEmployee } from "@/lib/services/employees";
+import { DuplicateEmployeeEmailError, updateEmployee, deleteEmployee } from "@/lib/services/employees";
 
 export const prerender = false;
 
@@ -82,6 +82,12 @@ export const PUT: APIRoute = async (context) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    if (error instanceof DuplicateEmployeeEmailError) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

@@ -90,10 +90,13 @@ describe("generateSignatureArtifacts", () => {
     const { decodedHtml, installerWithoutBlob } = decodeInstallerPayload(artifacts.thunderbirdInstaller);
 
     expect(artifacts.outlookHtml).toContain("Ada Lovelace");
+    expect(artifacts.outlookHtml).toContain("<title>Podpis e-mail</title>");
     expect(artifacts.outlookHtml).toContain("Engineer");
     expect(artifacts.outlookHtml).toContain("+48 123 456 789");
     expect(artifacts.outlookHtml).not.toContain("<img");
     expect(decodedHtml).toBe(artifacts.outlookHtml);
+    expect(artifacts.thunderbirdInstaller).toContain("Wybierz profil Thunderbirda:");
+    expect(artifacts.thunderbirdInstaller).not.toContain("Choose a Thunderbird profile:");
     expect(installerWithoutBlob).not.toContain(baseEmployee.firstName);
     expect(installerWithoutBlob).not.toContain(baseEmployee.lastName);
     expect(installerWithoutBlob).not.toContain(baseEmployee.position);
@@ -104,7 +107,7 @@ describe("generateSignatureArtifacts", () => {
     const artifacts = generateSignatureArtifacts(baseEmployee, logoFixture);
 
     expect(artifacts.outlookHtml).toContain("data:image/png;base64,AQID");
-    expect(artifacts.outlookHtml).toContain('alt="Company logo"');
+    expect(artifacts.outlookHtml).toContain('alt="Logo firmy"');
   });
 
   it.each(employeeFields.flatMap((field) => adversarialFixtures.map((fixture) => [field, fixture] as const)))(

@@ -15,7 +15,7 @@ export async function sendSignatureDeliveryEmail(to: string, token: string): Pro
   const smtpAppPassword = String(GMAIL_SMTP_APP_PASSWORD);
   const transport = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
+    port: 465,
     secure: true,
     auth: {
       user: smtpUsername,
@@ -25,6 +25,13 @@ export async function sendSignatureDeliveryEmail(to: string, token: string): Pro
     greetingTimeout: 10_000,
     socketTimeout: 15_000,
   });
+
+  try {
+    await transport.verify();
+    console.log("GMAIL SMTP AUTH OK");
+  } catch (err) {
+    console.error("SMTP ERROR:", err);
+  }
 
   await sendSignatureEmail(
     transport,

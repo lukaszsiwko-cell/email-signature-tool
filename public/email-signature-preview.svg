@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-labelledby="title description">
+  <title id="title">Podgląd wiadomości z podpisem e-mail</title>
+  <desc id="description">Wiadomość e-mail z podpisem Anny Kowalskiej, stanowiskiem, numerem telefonu i logo firmy.</desc>
+  <rect width="1200" height="600" fill="#edf3f1" />
+  <rect x="54" y="42" width="1092" height="516" rx="12" fill="#ffffff" stroke="#d7e1dc" stroke-width="2" />
+  <rect x="54" y="42" width="1092" height="64" rx="12" fill="#f7f9f8" />
+  <path d="M54 94h1092" stroke="#d7e1dc" stroke-width="2" />
+  <circle cx="91" cy="74" r="8" fill="#d97d72" />
+  <circle cx="119" cy="74" r="8" fill="#e3b45d" />
+  <circle cx="147" cy="74" r="8" fill="#70a98b" />
+  <text x="600" y="80" fill="#50645c" font-family="Arial, sans-serif" font-size="17" text-anchor="middle">Nowa wiadomość</text>
+  <text x="91" y="147" fill="#75857e" font-family="Arial, sans-serif" font-size="15">Do</text>
+  <text x="154" y="147" fill="#273b33" font-family="Arial, sans-serif" font-size="17">klient@example.pl</text>
+  <path d="M91 166h1018" stroke="#e5ebe8" stroke-width="2" />
+  <text x="91" y="205" fill="#75857e" font-family="Arial, sans-serif" font-size="15">Temat</text>
+  <text x="154" y="205" fill="#273b33" font-family="Arial, sans-serif" font-size="17">Miło było porozmawiać</text>
+  <path d="M91 224h1018" stroke="#e5ebe8" stroke-width="2" />
+  <text x="91" y="272" fill="#34483f" font-family="Arial, sans-serif" font-size="17">Dzień dobry,</text>
+  <text x="91" y="309" fill="#34483f" font-family="Arial, sans-serif" font-size="17">przesyłam podsumowanie naszej rozmowy. W razie pytań pozostaję do dyspozycji.</text>
+  <text x="91" y="355" fill="#34483f" font-family="Arial, sans-serif" font-size="17">Pozdrawiam,</text>
+  <path d="M91 382h1018" stroke="#e5ebe8" stroke-width="2" />
+  <rect x="91" y="410" width="58" height="58" rx="4" fill="#236c58" />
+  <path d="M105 451v-25h8l7 11 7-11h8v25h-8v-12l-7 10-7-10v12z" fill="#ffffff" />
+  <text x="174" y="430" fill="#20382e" font-family="Arial, sans-serif" font-size="20" font-weight="700">Anna Kowalska</text>
+  <text x="174" y="455" fill="#5c7067" font-family="Arial, sans-serif" font-size="16">Kierowniczka działu</text>
+  <text x="174" y="485" fill="#5c7067" font-family="Arial, sans-serif" font-size="16">+48 123 456 789</text>
+  <path d="M439 412v78" stroke="#d7e1dc" stroke-width="2" />
+  <text x="466" y="438" fill="#236c58" font-family="Arial, sans-serif" font-size="14" font-weight="700">FIRMA</text>
+  <text x="466" y="463" fill="#75857e" font-family="Arial, sans-serif" font-size="15">Podpis gotowy do wysłania</text>
+</svg>
