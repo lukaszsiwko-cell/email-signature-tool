@@ -71,7 +71,7 @@ function getDeliveryErrorMessage(code?: string): string {
     case "E_EMAIL_AUTH_FAILED":
       return "Resend odrzucił klucz API. Sprawdź konfigurację wysyłki.";
     case "E_EMAIL_CONNECTION_FAILED":
-      return "Nie udało się połączyć z usługą wysyłki. Spróbuj ponownie.";
+      return "Wystąpił problem z żądaniem do Resend. Spróbuj ponownie; szczegóły znajdziesz w logach Workera.";
     case "E_EMAIL_RATE_LIMITED":
       return "Przekroczono limit wysyłki. Spróbuj ponownie później.";
     case "E_EMAIL_SEND_FAILED":

@@ -56,6 +56,41 @@ describe("sendSignatureEmail", () => {
     ).rejects.toMatchObject({ message: "Resend connection failed", code: "E_EMAIL_CONNECTION_FAILED" });
   });
 
+  it("logs redacted diagnostics when the SDK throws", async () => {
+    const diagnosticLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const cause = Object.assign(
+      new Error("connect failed for https://api.resend.com with key re_test_secret and user@example.test"),
+      { code: "ECONNRESET" },
+    );
+    const emailTransport = {
+      emails: { send: vi.fn().mockRejectedValue(new Error("fetch failed", { cause })) },
+    };
+
+    try {
+      await expect(
+        sendSignatureEmail(
+          emailTransport,
+          { fromAddress: "signatures@example.test", publicAppUrl: "https://example.test" },
+          { to: "employee@example.test", token: "a".repeat(64) },
+        ),
+      ).rejects.toMatchObject({ code: "E_EMAIL_CONNECTION_FAILED" });
+
+      expect(diagnosticLog).toHaveBeenCalledWith("Resend request threw while sending signature email", {
+        name: "Error",
+        message: "fetch failed",
+        cause: {
+          name: "Error",
+          message: "connect failed for [URL] with key [API_KEY] and [EMAIL]",
+          code: "ECONNRESET",
+        },
+      });
+      expect(JSON.stringify(diagnosticLog.mock.calls)).not.toContain("re_test_secret");
+      expect(JSON.stringify(diagnosticLog.mock.calls)).not.toContain("user@example.test");
+    } finally {
+      diagnosticLog.mockRestore();
+    }
+  });
+
   it("rejects a response without an email id", async () => {
     const emailTransport = { emails: { send: vi.fn().mockResolvedValue({ data: {}, error: null }) } };
     await expect(

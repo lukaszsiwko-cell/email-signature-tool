@@ -148,6 +148,8 @@ PUBLIC_APP_URL=http://localhost:4321
 
 The email contains a one-time download link, not the generated signature files. If configuration is missing or Resend rejects the send, the app revokes the unused delivery token and reports a safe, actionable error. `onboarding@resend.dev` is only for testing with the recipient allowed by your Resend account, not for production delivery to employees.
 
+For delivery failures, check the production Worker logs around the request time. The app logs Resend's safe error metadata or, if the SDK throws, the exception name/message and one cause (including a network error code when available); URLs, email addresses, and Resend API keys are redacted. It does not log message contents or recipient details.
+
 ### Email confirmation in local development
 
 By default Supabase requires email confirmation before a user can sign in. To skip this during local development:
