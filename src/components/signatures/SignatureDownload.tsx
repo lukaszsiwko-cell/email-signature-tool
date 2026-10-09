@@ -88,7 +88,7 @@ export default function SignatureDownload() {
               }}
             >
               <Download className="size-4" />
-              Pobierz instalator Thunderbirda
+              Pobierz skrypt instalatora (.ps1)
             </Button>
             <Button
               type="button"
@@ -96,14 +96,37 @@ export default function SignatureDownload() {
               onClick={() => {
                 downloadArtifact(
                   artifacts.thunderbirdLauncher,
-                  "uruchom-instalator-thunderbird.cmd",
+                  "instalator-thunderbird.cmd",
                   "text/plain;charset=utf-8",
                 );
               }}
             >
               <Download className="size-4" />
-              Pobierz plik uruchamiający instalator
+              Pobierz plik uruchamiający (.cmd)
             </Button>
+            <div className="text-muted-foreground text-sm">
+              <p className="mb-2 font-medium">Automatyczna instalacja podpisu w Thunderbirdzie</p>
+              <p className="mb-2">
+                Wymagany jest Windows z Windows PowerShell 5.1 lub nowszym (powershell.exe) oraz Thunderbird z
+                skonfigurowanym kontem pocztowym.
+              </p>
+              <ol className="list-decimal space-y-1 pl-5">
+                <li>
+                  Pobierz oba pliki: instalator-thunderbird.ps1 i instalator-thunderbird.cmd. Zapisz je w tym samym
+                  folderze, bez zmiany nazw.
+                </li>
+                <li>Zapisz swoją pracę i zamknij Thunderbirda.</li>
+                <li>
+                  Otwórz instalator-thunderbird.cmd — uruchomi skrypt PowerShell. Wybierz profil i konto, dla którego
+                  chcesz ustawić podpis.
+                </li>
+                <li>Otwórz ponownie Thunderbirda i sprawdź podpis w nowej wiadomości.</li>
+              </ol>
+              <p className="mt-2">
+                Instalator zapisuje kopię zapasową ustawień. Nie wymaga uruchamiania jako administrator. Jeśli
+                organizacja blokuje skrypty PowerShell, skontaktuj się z działem IT.
+              </p>
+            </div>
           </div>
         ) : (
           <Button type="button" disabled={isRedeeming} onClick={() => void redeem()}>

@@ -28,7 +28,14 @@ describe("sendSignatureEmail", () => {
   });
 
   it("calls the SDK send method with its receiver intact", async () => {
-    const create = vi.fn(() => Promise.resolve({ data: { id: "test-message" }, error: null }));
+    const create = vi
+      .fn<
+        (message: { from: string; to: string; subject: string; text: string }) => Promise<{
+          data: { id: string };
+          error: null;
+        }>
+      >()
+      .mockResolvedValue({ data: { id: "test-message" }, error: null });
     const emailTransport = {
       emails: {
         create,

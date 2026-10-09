@@ -1,5 +1,5 @@
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -94,6 +94,69 @@ describe("generateSignatureArtifacts", () => {
     const installerBytes = new TextEncoder().encode(artifacts.thunderbirdInstaller);
 
     expect(Array.from(installerBytes.subarray(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+  });
+
+  it("encodes the launcher command as UTF-16LE while keeping the batch file ASCII", () => {
+    const { thunderbirdLauncher } = generateSignatureArtifacts(baseEmployee, null);
+    const match = /-EncodedCommand ([A-Za-z0-9+/=]+)/.exec(thunderbirdLauncher);
+    expect(match).not.toBeNull();
+    if (!match) throw new Error("Launcher is missing an encoded PowerShell command.");
+
+    const command = Buffer.from(match[1], "base64").toString("utf16le");
+    expect(command).toContain("Umieść oba pobrane pliki (.cmd i .ps1) w tym samym folderze.");
+    expect(command).toContain("Muszą mieć identyczne nazwy przed rozszerzeniem.");
+    expect(command).toContain("$installer = $env:THUNDERBIRD_INSTALLER");
+    expect(command).toContain("Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned");
+    expect(command).toContain("'MachinePolicy', 'UserPolicy'");
+    expect(thunderbirdLauncher).toContain('set "THUNDERBIRD_INSTALLER=%~dpn0.ps1"');
+    expect(Array.from(thunderbirdLauncher).every((character) => character.charCodeAt(0) < 128)).toBe(true);
+    expect(thunderbirdLauncher.split("\r\n").every((line) => line.length < 8191)).toBe(true);
+  });
+
+  it.skipIf(process.platform !== "win32").each(["instalator-thunderbird", "Ada-Lovelace-thunderbird-installer"])(
+    "runs the matching installer from the %s launcher on Windows",
+    (filenameBase) => {
+      const directory = mkdtempSync(join(tmpdir(), "thunderbird-launcher-Łukasz test-"));
+      const launcherPath = join(directory, `${filenameBase}.cmd`);
+      const installerPath = join(directory, `${filenameBase}.ps1`);
+      const markerPath = join(directory, "executed-installer.txt");
+
+      try {
+        writeFileSync(launcherPath, generateSignatureArtifacts(baseEmployee, null).thunderbirdLauncher, "utf8");
+        writeFileSync(installerPath, "[System.IO.File]::WriteAllText($env:TEST_MARKER_PATH, $PSCommandPath)", "utf8");
+
+        execFileSync(process.env.ComSpec ?? "C:\\Windows\\System32\\cmd.exe", ["/d", "/c", launcherPath], {
+          env: { ...process.env, TEST_MARKER_PATH: markerPath },
+          input: "\r\n",
+          stdio: "pipe",
+          timeout: 15000,
+        });
+
+        expect(realpathSync.native(readFileSync(markerPath, "utf8"))).toBe(realpathSync.native(installerPath));
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it.skipIf(process.platform !== "win32")("reports a missing installer in Polish and exits with an error", () => {
+    const directory = mkdtempSync(join(tmpdir(), "thunderbird-missing-installer-"));
+    const launcherPath = join(directory, "instalator-thunderbird.cmd");
+
+    try {
+      writeFileSync(launcherPath, generateSignatureArtifacts(baseEmployee, null).thunderbirdLauncher, "utf8");
+      const result = spawnSync(process.env.ComSpec ?? "C:\\Windows\\System32\\cmd.exe", ["/d", "/c", launcherPath], {
+        input: "\r\n",
+        encoding: "utf8",
+        timeout: 15000,
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Umieść oba pobrane pliki (.cmd i .ps1) w tym samym folderze.");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it.skipIf(process.platform !== "win32")("parses the installer in Windows PowerShell without executing it", () => {

@@ -150,6 +150,19 @@ The email contains a one-time download link, not the generated signature files. 
 
 For delivery failures, check the production Worker logs around the request time. The app logs Resend's safe error metadata or, if the SDK throws, the exception name/message and one cause (including a network error code when available); URLs, email addresses, and Resend API keys are redacted. It does not log message contents or recipient details.
 
+### Installing a Thunderbird signature on Windows
+
+Automatic installation requires Windows PowerShell 5.1 or newer (`powershell.exe`) and a Thunderbird profile with an existing email account. PowerShell 7 alone (`pwsh.exe`) is not sufficient for the launcher.
+
+1. Download both the PowerShell installer (`.ps1`) and launcher (`.cmd`) into the same folder. The recipient page downloads `instalator-thunderbird.ps1` and `instalator-thunderbird.cmd`; the employee list uses employee-specific names with matching stems. Keep both names unchanged.
+2. Save your work and close Thunderbird.
+3. Open the `.cmd` file. It runs the `.ps1` installer and prompts for the Thunderbird profile and account.
+4. Reopen Thunderbird and verify the signature in a new message.
+
+The installer backs up the profile settings and existing signature before making changes. Administrator privileges are not required. Organizational execution policies remain enforced; contact IT if scripts are blocked. The launcher uses a UTF-16LE encoded PowerShell command to preserve Polish messages independently of the Windows command-shell code page.
+
+Previously downloaded recipient launchers named `uruchom-instalator-thunderbird.cmd` expect a matching `uruchom-instalator-thunderbird.ps1`. Rename the accompanying `instalator-thunderbird.ps1` to that name to use the old pair, or download a fresh pair.
+
 ### Email confirmation in local development
 
 By default Supabase requires email confirmation before a user can sign in. To skip this during local development:

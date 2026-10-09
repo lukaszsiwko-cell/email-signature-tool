@@ -176,14 +176,31 @@ Write-Host ('Kopia zapasowa została zapisana w: {0}.' -f $backupDirectory)
 }
 
 function createThunderbirdLauncher(): string {
+  const command = String.raw`$ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$policies = @(Get-ExecutionPolicy -List)
+$groupPolicy = @($policies | Where-Object { $_.Scope -in @('MachinePolicy', 'UserPolicy') -and $_.ExecutionPolicy -ne 'Undefined' })
+$blockedPolicy = @($groupPolicy | Where-Object { $_.ExecutionPolicy -in @('Restricted', 'AllSigned') })
+if ($blockedPolicy.Count -gt 0) { throw 'Uruchamianie skryptów PowerShell jest ograniczone przez organizację. Skontaktuj się z działem IT.' }
+if ($groupPolicy.Count -eq 0) { Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned }
+$installer = $env:THUNDERBIRD_INSTALLER
+if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Umieść oba pobrane pliki (.cmd i .ps1) w tym samym folderze. Muszą mieć identyczne nazwy przed rozszerzeniem.' }
+Unblock-File -LiteralPath $installer
+& $installer`;
+  const commandBytes = new Uint8Array(command.length * 2);
+  const commandView = new DataView(commandBytes.buffer);
+  for (let index = 0; index < command.length; index++) {
+    commandView.setUint16(index * 2, command.charCodeAt(index), true);
+  }
+
   return String.raw`@echo off
 setlocal
 set "THUNDERBIRD_INSTALLER=%~dpn0.ps1"
-powershell.exe -NoProfile -Command "$ErrorActionPreference = 'Stop'; $policies = @(Get-ExecutionPolicy -List); $groupPolicy = @($policies | Where-Object { $_.Scope -in @('MachinePolicy', 'UserPolicy') -and $_.ExecutionPolicy -ne 'Undefined' }); $blockedPolicy = @($groupPolicy | Where-Object { $_.ExecutionPolicy -in @('Restricted', 'AllSigned') }); if ($blockedPolicy.Count -gt 0) { throw 'Uruchamianie skryptów PowerShell jest ograniczone przez organizację. Skontaktuj się z działem IT.' }; if ($groupPolicy.Count -eq 0) { Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned }; $installer = $env:THUNDERBIRD_INSTALLER; if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) { throw 'Umieść plik uruchamiający obok odpowiadającego mu instalatora .ps1.' }; Unblock-File -LiteralPath $installer; & $installer"
+powershell.exe -NoProfile -EncodedCommand ${encodeBase64(commandBytes)}
 set "EXIT_CODE=%ERRORLEVEL%"
 pause
 exit /b %EXIT_CODE%
-`;
+`.replace(/\r?\n/g, "\r\n");
 }
 
 export function generateSignatureArtifacts(
