@@ -29,9 +29,9 @@ function getSafeDiagnostic(error, includeCause = true) {
 }
 
 export async function sendSignatureEmail(emailTransport, config, message) {
-  const sendEmail = emailTransport?.emails?.send;
+  const emails = emailTransport?.emails;
 
-  if (!sendEmail || !config?.fromAddress || !config?.publicAppUrl) {
+  if (!emails?.send || !config?.fromAddress || !config?.publicAppUrl) {
     throw new Error("Resend is not configured");
   }
 
@@ -55,7 +55,7 @@ export async function sendSignatureEmail(emailTransport, config, message) {
 
   let result;
   try {
-    result = await sendEmail({
+    result = await emails.send({
       from: config.fromAddress,
       to: message.to,
       subject: "Pliki z podpisem e-mail",

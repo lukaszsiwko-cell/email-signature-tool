@@ -27,6 +27,26 @@ describe("sendSignatureEmail", () => {
     expect(sentMessage?.text).not.toContain("Download your email signature files");
   });
 
+  it("calls the SDK send method with its receiver intact", async () => {
+    const create = vi.fn(() => Promise.resolve({ data: { id: "test-message" }, error: null }));
+    const emailTransport = {
+      emails: {
+        create,
+        send(this: { create: typeof create }, message: { from: string; to: string; subject: string; text: string }) {
+          return this.create(message);
+        },
+      },
+    };
+
+    await sendSignatureEmail(
+      emailTransport,
+      { fromAddress: "signatures@example.test", publicAppUrl: "https://example.test" },
+      { to: "employee@example.test", token: "a".repeat(64) },
+    );
+
+    expect(create).toHaveBeenCalledOnce();
+  });
+
   it.each([
     [401, "E_EMAIL_AUTH_FAILED"],
     [403, "E_EMAIL_SEND_FAILED"],
