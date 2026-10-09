@@ -124,20 +124,19 @@
   @apply bg-brand;
 }
 
-.employee-workspace {
-  --background: #181a1e;
-  --foreground: #f4f5f7;
-  --card: #23262b;
-  --card-foreground: var(--foreground);
-  --muted: #2c3036;
-  --muted-foreground: #b5bac3;
-  --accent: #343941;
-  --accent-foreground: var(--foreground);
-  --border: #3b4049;
-  --input: #454b55;
+@utility workspace-shell {
+  @apply min-h-screen p-4 sm:p-8;
+}
+
+@utility workspace-container {
+  @apply mx-auto w-full max-w-7xl min-w-0;
 }
 
 @layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }

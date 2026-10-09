@@ -7,8 +7,10 @@ const { user } = Astro.locals;
 
 {user ? (
   <div class="bg-brand min-h-screen w-full text-foreground">
-    <div class="p-4 sm:p-8">
-      <Topbar />
+    <div class="workspace-shell">
+      <div class="workspace-container">
+        <Topbar />
+      </div>
 
       <main class="mx-auto grid max-w-6xl items-center gap-14 px-4 py-16 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:py-28">
         <section>
