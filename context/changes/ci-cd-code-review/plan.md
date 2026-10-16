@@ -260,21 +260,21 @@ No application database migration is needed. Existing untracked review drafts sh
 
 #### Automated
 
-- [x] 2.1 Reviewer tests verify provider usage extraction and that usage logs contain no API key or other secret values.
+- [x] 2.1 Reviewer tests verify provider usage extraction and that usage logs contain no API key or other secret values. — 3370fdc
 
 #### Manual
 
-- [x] 2.2 Run attended representative reviews and reconcile reported cost and units with the OpenRouter dashboard.
-- [x] 2.3 Configure and verify the dedicated key, production model, and aggregate hard budget before enabling reviews.
-- [x] 2.4 Confirm `AI_REVIEW_ENABLED` remains false until the pilot and budget verification are complete.
+- [x] 2.2 Run attended representative reviews and reconcile reported cost and units with the OpenRouter dashboard. — 3370fdc
+- [x] 2.3 Configure and verify the dedicated key, production model, and aggregate hard budget before enabling reviews. — 3370fdc
+- [x] 2.4 Confirm `AI_REVIEW_ENABLED` remains false until the pilot and budget verification are complete. — 3370fdc
 
 ### Phase 3: Complete the Local Composite Action
 
 #### Automated
 
-- [ ] 3.1 `npm test --prefix reviewer` verifies API interaction, comment upsert, mutually exclusive result labels, retry-label consumption, and verdict output.
-- [ ] 3.2 Action-level tests verify PR data is passed as data and never evaluated as shell code.
-- [ ] 3.3 A `fail` verdict still updates its comment and labels before the consuming workflow fails on the output.
+- [x] 3.1 `npm test --prefix reviewer` verifies API interaction, comment upsert, mutually exclusive result labels, retry-label consumption, and verdict output.
+- [x] 3.2 Action-level tests verify PR data is passed as data and never evaluated as shell code.
+- [x] 3.3 A `fail` verdict still updates its comment and labels before the consuming workflow fails on the output.
 
 ### Phase 4: Wire and Verify the PR Workflow
 
