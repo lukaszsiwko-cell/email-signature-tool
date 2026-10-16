@@ -56,5 +56,9 @@ async function getEmployeeDepartmentId(supabase: SupabaseClient, employeeId: str
     throw new Error(error.message);
   }
 
+  if (typeof data.department_id !== "string") {
+    throw new Error("Employee department lookup did not return a department id");
+  }
+
   return data.department_id;
 }
