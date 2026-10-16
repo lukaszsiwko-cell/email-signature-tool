@@ -280,12 +280,12 @@ No application database migration is needed. Existing untracked review drafts sh
 
 #### Automated
 
-- [x] 4.1 `npm run lint`, `npx astro check`, and `npm run build` pass for the existing application.
-- [x] 4.2 Reviewer install, test, lint, and typecheck commands pass without live model credentials.
-- [x] 4.3 Workflow and action satisfy the agreed trigger, trusted-checkout, fork, enable-gate, permission, local-action, and verdict-gate contracts.
+- [x] 4.1 `npm run lint`, `npx astro check`, and `npm run build` pass for the existing application. — c1082ed
+- [x] 4.2 Reviewer install, test, lint, and typecheck commands pass without live model credentials. — c1082ed
+- [x] 4.3 Workflow and action satisfy the agreed trigger, trusted-checkout, fork, enable-gate, permission, local-action, and verdict-gate contracts. — c1082ed
 
 #### Manual
 
-- [x] 4.4 Verify the disabled workflow and fork guard prevent model execution before enabling automation.
-- [x] 4.5 Verify same-repository pass/fail, comment updates, result labels, and retry behavior after the cost gate is approved.
-- [x] 4.6 Verify fork secret exclusion and configure required branch protection if desired.
+- [x] 4.4 Verify the disabled workflow and fork guard prevent model execution before enabling automation. — c1082ed
+- [x] 4.5 Verify same-repository pass/fail, comment updates, result labels, and retry behavior after the cost gate is approved. — c1082ed
+- [x] 4.6 Verify fork secret exclusion and configure required branch protection if desired. — c1082ed
