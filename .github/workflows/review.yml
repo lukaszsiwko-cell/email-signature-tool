@@ -1,31 +1,46 @@
-# .github/workflows/review.yml
 name: AI Code Review
 
 on:
   pull_request:
     branches: [main]
-  workflow_dispatch:
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   review:
-    if: ${{ vars.AI_REVIEW_ENABLED == 'true' }}
+    if: >-
+      ${{
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        vars.AI_REVIEW_ENABLED == 'true' &&
+        (github.event.action != 'labeled' || github.event.label.name == 'ai-cr:review')
+      }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout trusted base revision
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          ref: ${{ github.event.pull_request.base.sha }}
 
-      - name: Configure node
+      - name: Configure Node.js
         uses: actions/setup-node@v7
         with:
-          node-version-file: '.nvmrc'
-
-      - name: Install dependencies
-        run: npm ci
+          node-version-file: .nvmrc
 
       - name: Run AI reviewer
-        uses: twoj-zespol/ai-reviewer@<sha>
+        uses: ./
         id: review
         with:
-          api-key: ${{ secrets.LLM_PROVIDER_API_KEY }}
+          pr-number: ${{ github.event.pull_request.number }}
+          github-token: ${{ github.token }}
+          openrouter-key: ${{ secrets.OPENROUTER_API_KEY }}
+          model: ${{ vars.OPENROUTER_MODEL }}
+
+      - name: Fail check for a failing review verdict
+        if: ${{ steps.review.outputs.verdict == 'fail' }}
+        run: |
+          echo "The AI reviewer returned a fail verdict."
+          exit 1

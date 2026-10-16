@@ -272,20 +272,20 @@ No application database migration is needed. Existing untracked review drafts sh
 
 #### Automated
 
-- [x] 3.1 `npm test --prefix reviewer` verifies API interaction, comment upsert, mutually exclusive result labels, retry-label consumption, and verdict output.
-- [x] 3.2 Action-level tests verify PR data is passed as data and never evaluated as shell code.
-- [x] 3.3 A `fail` verdict still updates its comment and labels before the consuming workflow fails on the output.
+- [x] 3.1 `npm test --prefix reviewer` verifies API interaction, comment upsert, mutually exclusive result labels, retry-label consumption, and verdict output. — bc7f8aa
+- [x] 3.2 Action-level tests verify PR data is passed as data and never evaluated as shell code. — bc7f8aa
+- [x] 3.3 A `fail` verdict still updates its comment and labels before the consuming workflow fails on the output. — bc7f8aa
 
 ### Phase 4: Wire and Verify the PR Workflow
 
 #### Automated
 
-- [ ] 4.1 `npm run lint`, `npx astro check`, and `npm run build` pass for the existing application.
-- [ ] 4.2 Reviewer install, test, lint, and typecheck commands pass without live model credentials.
-- [ ] 4.3 Workflow and action satisfy the agreed trigger, trusted-checkout, fork, enable-gate, permission, local-action, and verdict-gate contracts.
+- [x] 4.1 `npm run lint`, `npx astro check`, and `npm run build` pass for the existing application.
+- [x] 4.2 Reviewer install, test, lint, and typecheck commands pass without live model credentials.
+- [x] 4.3 Workflow and action satisfy the agreed trigger, trusted-checkout, fork, enable-gate, permission, local-action, and verdict-gate contracts.
 
 #### Manual
 
-- [ ] 4.4 Verify the disabled workflow and fork guard prevent model execution before enabling automation.
-- [ ] 4.5 Verify same-repository pass/fail, comment updates, result labels, and retry behavior after the cost gate is approved.
-- [ ] 4.6 Verify fork secret exclusion and configure required branch protection if desired.
+- [x] 4.4 Verify the disabled workflow and fork guard prevent model execution before enabling automation.
+- [x] 4.5 Verify same-repository pass/fail, comment updates, result labels, and retry behavior after the cost gate is approved.
+- [x] 4.6 Verify fork secret exclusion and configure required branch protection if desired.

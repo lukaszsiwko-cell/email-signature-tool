@@ -75,3 +75,28 @@ provider dashboard. Only after the pilot, dashboard reconciliation, and
 dedicated-key budget verification are complete—and the workflow is wired to
 the production settings—may an operator change `AI_REVIEW_ENABLED` to
 `true`. Until then, leave automatic reviews disabled.
+
+## Pull request workflow
+
+When enabled, the `AI Code Review` workflow reviews pull requests targeting
+`main` when they are opened, updated, or reopened. It checks out the trusted
+base commit before invoking the repository-local action. Pull requests from
+forks are excluded: they do not run the reviewer or receive the OpenRouter
+secret. The workflow also skips model execution unless the repository variable
+`AI_REVIEW_ENABLED` is exactly `true`; keep it unset or set to `false` until
+the cost pilot and budget checks above are complete.
+
+The action updates its existing review comment and result labels before the
+workflow reports the verdict. A `pass` verdict completes the review check; a
+`fail` verdict fails it after those updates. Operational errors also fail the
+check rather than being treated as a successful review.
+
+To retry a review on a same-repository pull request, add the `ai-cr:review`
+label. Only adding that label triggers a retry; the action consumes it, so
+another retry requires adding the label again. Adding other labels does not
+run the reviewer.
+
+To make the review a merge requirement, configure branch protection or a
+repository ruleset manually and require the `AI Code Review / review` status
+check. The check can be skipped while reviews are disabled or for fork pull
+requests, so requiring it is an explicit repository policy decision.

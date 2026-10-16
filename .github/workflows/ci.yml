@@ -24,6 +24,19 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
+  reviewer:
+    name: Reviewer tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --prefix reviewer
+      - run: npm test --prefix reviewer
+      - run: npm run lint --prefix reviewer
+      - run: npm run typecheck --prefix reviewer
+
   smoke:
     runs-on: ubuntu-latest
     steps:
