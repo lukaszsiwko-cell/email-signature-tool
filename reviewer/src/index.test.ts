@@ -137,4 +137,35 @@ describe("review CLI", () => {
     expect(stderr.writes.join("")).toContain("[REDACTED]");
     expect(stderr.writes.join("")).not.toContain(secret);
   });
+
+  it("keeps API keys and unrelated provider secrets out of usage logs", async () => {
+    const apiKey = "openrouter-api-key-secret";
+    const providerSecret = "provider-metadata-secret";
+    const stdout = capture();
+    const stderr = capture();
+    const exitCode = await runCli({
+      stdin: streamFrom(input),
+      stdout: stdout.stream,
+      stderr: stderr.stream,
+      env: { OPENROUTER_API_KEY: apiKey, OPENROUTER_MODEL: "test/model" },
+      generate: async () => ({
+        output: validReview,
+        usage: { inputTokens: 10, outputTokens: 5, credential: providerSecret },
+        providerMetadata: {
+          openrouter: { usage: { cost: 0.001, credential: providerSecret } },
+          credential: providerSecret,
+        },
+      }),
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.writes.join("")).not.toContain(apiKey);
+    expect(stderr.writes.join("")).not.toContain(providerSecret);
+    expect(JSON.parse(stderr.writes.join("")).usage).toEqual({
+      inputTokens: 10,
+      outputTokens: 5,
+      totalTokens: 15,
+      providerCostUsd: 0.001,
+    });
+  });
 });

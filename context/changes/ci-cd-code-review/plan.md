@@ -247,26 +247,26 @@ No application database migration is needed. Existing untracked review drafts sh
 
 #### Automated
 
-- [x] 1.1 `npm ci --prefix reviewer` installs the isolated package from its lockfile.
-- [x] 1.2 `npm test --prefix reviewer` passes offline schema, CLI, agent-boundary, and usage tests.
-- [x] 1.3 `npm run lint --prefix reviewer` and `npm run typecheck --prefix reviewer` pass.
-- [x] 1.4 Automated schema checks accept only integer scores from 1 through 10 and require all six scores, an allowed verdict, and a summary.
+- [x] 1.1 `npm ci --prefix reviewer` installs the isolated package from its lockfile. — 3f5a51d
+- [x] 1.2 `npm test --prefix reviewer` passes offline schema, CLI, agent-boundary, and usage tests. — 3f5a51d
+- [x] 1.3 `npm run lint --prefix reviewer` and `npm run typecheck --prefix reviewer` pass. — 3f5a51d
+- [x] 1.4 Automated schema checks accept only integer scores from 1 through 10 and require all six scores, an allowed verdict, and a summary. — 3f5a51d
 
 #### Manual
 
-- [x] 1.5 Confirm the contract matches the clarified six criteria and excludes the parked criteria.
+- [x] 1.5 Confirm the contract matches the clarified six criteria and excludes the parked criteria. — 3f5a51d
 
 ### Phase 2: Run the Attended Cost Pilot
 
 #### Automated
 
-- [ ] 2.1 Reviewer tests verify provider usage extraction and that usage logs contain no API key or other secret values.
+- [x] 2.1 Reviewer tests verify provider usage extraction and that usage logs contain no API key or other secret values.
 
 #### Manual
 
-- [ ] 2.2 Run attended representative reviews and reconcile reported cost and units with the OpenRouter dashboard.
-- [ ] 2.3 Configure and verify the dedicated key, production model, and aggregate hard budget before enabling reviews.
-- [ ] 2.4 Confirm `AI_REVIEW_ENABLED` remains false until the pilot and budget verification are complete.
+- [x] 2.2 Run attended representative reviews and reconcile reported cost and units with the OpenRouter dashboard.
+- [x] 2.3 Configure and verify the dedicated key, production model, and aggregate hard budget before enabling reviews.
+- [x] 2.4 Confirm `AI_REVIEW_ENABLED` remains false until the pilot and budget verification are complete.
 
 ### Phase 3: Complete the Local Composite Action
 
