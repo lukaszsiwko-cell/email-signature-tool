@@ -5,8 +5,9 @@ description: >
   design-system contract — audit into 3–5 charges (missing tokens, missing shared
   component, accidental architecture), fix the contract before the pixels, cover a
   7-state matrix, gate with a screenshot, and leave a rule so the next agent keeps
-  using the tokens and components. The UI entry to /10x-research → /10x-plan →
-  /10x-implement, sharing the same change folder and Progress. Use when the user wants
+  using the tokens and components. The UI entry point to the chain: it pre-audits the
+  view, suggests a change-id and hands you /10x-new, then the audit brief for
+  /10x-research → /10x-plan → /10x-implement, sharing the same change folder and Progress. Use when the user wants
   a theme, a restyle, "make it prettier", shadcn/Tailwind work, design tokens, dark
   mode, a visible-focus pass, or cleanup of UI an agent built feature by feature. Not a
   generator for a view that does not exist yet, not a component catalog, not a
@@ -23,10 +24,11 @@ screenshot: the markup renders, the data flows, the screen does its job and just
 enough. Producing that first view is ordinary feature work for the Core Skills Chain; this
 skill picks up the moment it is on screen.
 
-It does not replace the chain. It opens the change, runs the audit brief through
-`/10x-research`, shapes the plan `/10x-plan` writes, and adds UI checks to each
-`/10x-implement` phase. Those skills keep their own contracts — same `plan.md`, same
-`## Progress`, same commit ritual.
+It does not replace the chain, and it does not run the chain's skills for you. It is the
+entry point: it pre-audits the view, suggests a change-id and hands you `/10x-new`, then
+hands you the audit brief for `/10x-research`. After that it shapes the plan `/10x-plan`
+writes and adds UI checks to each `/10x-implement` phase. You run each command; those skills
+keep their own contracts — same `plan.md`, same `## Progress`, same commit ritual.
 
 Target: `$ARGUMENTS`
 
@@ -57,8 +59,8 @@ If `context/foundation/lessons.md` exists, read it once for recurring UI failure
    - Refuse `context/archive/` paths: "This change is archived. Open a new change with
      `/10x-new` instead."
 2. **Pre-audit (minutes, not research):** locate the value source, the shared components
-   directory, the agent rules file(s) (the project's AI configuration file (AGENTS.md),
-   `AGENTS.md`, `.cursor/rules/*`, `.windsurfrules`, `copilot-instructions.md`), and run the hardcoded-value scan below on
+   directory, the agent rules file(s) (the project's AI configuration file (AGENTS.md), `AGENTS.md`, `.cursor/rules/*`,
+   `.windsurfrules`, `copilot-instructions.md`), and run the hardcoded-value scan below on
    the view's files. Report the counts — they tell you which contract variant applies.
 3. **Hand off to `/10x-research`** with the audit brief from *The audit* below; copy the
    command to the clipboard. The charges land in `research.md` under `## Charges`.
