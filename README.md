@@ -173,6 +173,20 @@ By default Supabase requires email confirmation before a user can sign in. To sk
 
 Users can then sign in immediately after sign-up without clicking a confirmation link.
 
+### Polish account activation email
+
+Account activation messages are sent by Supabase Auth, separately from the signature-delivery Resend client. The Polish template is stored in `supabase/templates/confirmation.html` and configured for local Supabase in `supabase/config.toml`. Local email confirmation remains disabled by default.
+
+For a hosted production Supabase project:
+
+1. Open **Authentication → Email Templates → Confirm signup** in the Supabase dashboard.
+2. Set the subject to `Aktywuj konto w generatorze podpisów e-mail`.
+3. Paste the contents of `supabase/templates/confirmation.html` into the message body and save.
+4. Keep `{{ .ConfirmationURL }}` unchanged: Supabase generates the actual activation URL.
+5. Test a new signup and verify the Polish email and activation link.
+
+Deploying the Cloudflare Worker or applying database migrations does not update hosted Supabase email templates.
+
 ### Auth routes
 
 | Route                 | Description                                                             |

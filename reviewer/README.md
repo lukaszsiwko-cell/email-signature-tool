@@ -89,7 +89,18 @@ the cost pilot and budget checks above are complete.
 The action updates its existing review comment and result labels before the
 workflow reports the verdict. A `pass` verdict completes the review check; a
 `fail` verdict fails it after those updates. Operational errors also fail the
-check rather than being treated as a successful review.
+check rather than being treated as a successful review. It updates only a
+marked comment authored by `github-actions[bot]`; a user-authored comment with
+the same marker is left untouched.
+
+The action searches at most 10 pages (1,000 comments) for its marked summary.
+If it reaches that bound without finding the summary, it fails visibly rather
+than creating a possible duplicate comment.
+
+The reviewer action rejects serialized input larger than 1 MiB, caps captured
+stdout at 1 MiB and stderr at 16 KiB, and terminates the child process after
+10 minutes. These limits fail the review visibly; the action does not truncate
+the diff or treat a timeout as a verdict.
 
 To retry a review on a same-repository pull request, add the `ai-cr:review`
 label. Only adding that label triggers a retry; the action consumes it, so

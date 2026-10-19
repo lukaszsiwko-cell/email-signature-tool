@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { REVIEW_SCHEMA, type Review, type ReviewInput } from "./review-schema.js";
 
 const COMMENT_MARKER = "<!-- ai-cr-review -->";
+const REVIEW_BOT_LOGIN = "github-actions[bot]";
 const LABELS = {
   passed: { name: "ai-cr:passed", color: "0e8a16" },
   failed: { name: "ai-cr:failed", color: "d73a4a" },
@@ -11,15 +12,22 @@ const LABELS = {
 } as const;
 const API_VERSION = "2022-11-28";
 const COMMENTS_PER_PAGE = 100;
+const MAX_COMMENT_PAGES = 10;
+const MAX_REVIEW_INPUT_BYTES = 1024 * 1024;
+const MAX_REVIEW_STDOUT_BYTES = 1024 * 1024;
+const MAX_REVIEW_STDERR_BYTES = 16 * 1024;
+const REVIEWER_TIMEOUT_MS = 10 * 60 * 1000;
 
 interface PullRequest {
   title: string;
   body: string | null;
+  head: { sha: string };
 }
 
 interface IssueComment {
   id: number;
   body: string | null;
+  user?: { login?: string };
 }
 
 interface IssueLabel {
@@ -97,6 +105,11 @@ export async function runReviewerCli(
   env: NodeJS.ProcessEnv,
   spawnProcess: typeof spawn = spawn,
 ): Promise<Review> {
+  const serializedInput = JSON.stringify(input);
+  if (Buffer.byteLength(serializedInput, "utf8") > MAX_REVIEW_INPUT_BYTES) {
+    throw new Error("Reviewer input exceeds the 1 MiB limit.");
+  }
+
   const packageDirectory = fileURLToPath(new URL("../", import.meta.url));
   const childEnvironment: NodeJS.ProcessEnv = {
     ...env,
@@ -118,17 +131,48 @@ export async function runReviewerCli(
 
   let stdout = "";
   let stderr = "";
-  child.stdout.setEncoding("utf8").on("data", (chunk: string) => {
-    stdout += chunk;
-  });
-  child.stderr.setEncoding("utf8").on("data", (chunk: string) => {
-    stderr += chunk;
-  });
-
   const exitCode = await new Promise<number>((resolve, reject) => {
-    child.once("error", reject);
-    child.once("close", (code) => resolve(code ?? 1));
-    child.stdin.end(JSON.stringify(input));
+    let settled = false;
+    const timeout = setTimeout(
+      () => fail(new Error("Reviewer process timed out after 10 minutes.")),
+      REVIEWER_TIMEOUT_MS,
+    );
+
+    function fail(error: Error): void {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      child.kill();
+      reject(error);
+    }
+
+    child.once("error", fail);
+    child.stdin.once("error", fail);
+    child.once("close", (code) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      resolve(code ?? 1);
+    });
+    child.stdout.setEncoding("utf8").on("data", (chunk: string) => {
+      if (Buffer.byteLength(stdout, "utf8") + Buffer.byteLength(chunk, "utf8") > MAX_REVIEW_STDOUT_BYTES) {
+        fail(new Error("Reviewer stdout exceeds the 1 MiB limit."));
+        return;
+      }
+      stdout += chunk;
+    });
+    child.stderr.setEncoding("utf8").on("data", (chunk: string) => {
+      if (Buffer.byteLength(stderr, "utf8") + Buffer.byteLength(chunk, "utf8") > MAX_REVIEW_STDERR_BYTES) {
+        fail(new Error("Reviewer stderr exceeds the 16 KiB limit."));
+        return;
+      }
+      stderr += chunk;
+    });
+    child.stdin.end(serializedInput);
   });
 
   if (exitCode !== 0) {
@@ -200,10 +244,13 @@ export async function runGithubReview(options: GitHubReviewOptions = {}): Promis
   const pullRequest = await requestJson<PullRequest>(pullRequestPath);
   if (
     typeof pullRequest.title !== "string" ||
-    (pullRequest.body !== null && typeof pullRequest.body !== "string")
+    (pullRequest.body !== null && typeof pullRequest.body !== "string") ||
+    typeof pullRequest.head?.sha !== "string" ||
+    !/^[a-f0-9]{40}$/i.test(pullRequest.head.sha)
   ) {
     throw new Error("GitHub returned invalid pull request metadata.");
   }
+  const reviewedHeadSha = pullRequest.head.sha;
 
   const diffResponse = await request(pullRequestPath, {
     headers: { Accept: "application/vnd.github.diff" },
@@ -216,26 +263,35 @@ export async function runGithubReview(options: GitHubReviewOptions = {}): Promis
   const review = await (options.runReviewer ?? ((reviewInput, configuration) =>
     runReviewerCli(reviewInput, configuration, env)))(input, { apiKey, model });
   const validatedReview = REVIEW_SCHEMA.parse(review);
+  const latestPullRequest = await requestJson<PullRequest>(pullRequestPath);
+  if (latestPullRequest.head?.sha !== reviewedHeadSha) {
+    throw new Error("Pull request changed during review.");
+  }
   const commentBody = makeReviewComment(validatedReview);
   const commentsPath = `/issues/${prNumber}/comments`;
-  const comments: IssueComment[] = [];
+  let existingComment: IssueComment | undefined;
 
-  for (let page = 1; ; page += 1) {
+  for (let page = 1; page <= MAX_COMMENT_PAGES; page += 1) {
     const pageComments = await requestJson<IssueComment[]>(
       `${commentsPath}?per_page=${COMMENTS_PER_PAGE}&page=${page}`,
     );
     if (!Array.isArray(pageComments)) {
       throw new Error("GitHub returned an invalid comment list.");
     }
-    comments.push(...pageComments);
-    if (pageComments.length < COMMENTS_PER_PAGE) {
+    existingComment = pageComments.find(
+      (comment) =>
+        typeof comment.body === "string" &&
+        comment.body.includes(COMMENT_MARKER) &&
+        comment.user?.login === REVIEW_BOT_LOGIN,
+    );
+    if (existingComment || pageComments.length < COMMENTS_PER_PAGE) {
       break;
+    }
+    if (page === MAX_COMMENT_PAGES) {
+      throw new Error("Review comment search limit exceeded.");
     }
   }
 
-  const existingComment = comments.find(
-    (comment) => typeof comment.body === "string" && comment.body.includes(COMMENT_MARKER),
-  );
   if (existingComment) {
     await request(`/issues/comments/${existingComment.id}`, {
       method: "PATCH",
