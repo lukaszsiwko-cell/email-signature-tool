@@ -32,10 +32,11 @@ interface RequestRecord {
 }
 
 interface HarnessOptions {
-  comments?: Array<{ id: number; body: string | null }>;
+  comments?: Array<{ id: number; body: string | null; user?: { login?: string } }>;
   issueLabels?: string[];
   existingRepositoryLabels?: string[];
   failOn?: { method: string; path: string; status: number };
+  latestHeadSha?: string;
 }
 
 function jsonResponse(status: number, value: unknown): Response {
@@ -49,6 +50,7 @@ function createHarness(options: HarnessOptions = {}) {
   const records: RequestRecord[] = [];
   const events: string[] = [];
   const existingRepositoryLabels = new Set(options.existingRepositoryLabels ?? []);
+  let pullRequestRequests = 0;
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
     const url = new URL(String(input));
     const method = init.method ?? "GET";
@@ -65,9 +67,15 @@ function createHarness(options: HarnessOptions = {}) {
       return new Response("diff --git a/file.js b/file.js\n+$(touch owned) `not-a-command`", { status: 200 });
     }
     if (path === "/repos/octo-org/example/pulls/42") {
+      pullRequestRequests += 1;
       return jsonResponse(200, {
         title: "Review $(touch owned) `not-a-command`",
         body: "Body with ; process substitution $(echo unsafe)",
+        head: {
+          sha: pullRequestRequests === 1
+            ? "a".repeat(40)
+            : options.latestHeadSha ?? "a".repeat(40),
+        },
       });
     }
     if (path.startsWith("/repos/octo-org/example/issues/42/comments?")) {
@@ -118,6 +126,35 @@ function createHarness(options: HarnessOptions = {}) {
 }
 
 describe("GitHub review action runner", () => {
+  it("keeps the PR workflow trusted, gated, and serialized", () => {
+    const workflowYaml = readFileSync(
+      new URL("../../.github/workflows/review.yml", import.meta.url),
+      "utf8",
+    ).replaceAll("\r\n", "\n");
+    expect(workflowYaml).toMatch(
+      /on:\n\x20{2}pull_request:\n\x20{4}branches: \[main\]\n\x20{4}types: \[opened, synchronize, reopened, labeled\]/,
+    );
+    expect(workflowYaml).toMatch(
+      /concurrency:\s+group:\s+ai-cr-\$\{\{\s*github\.event\.pull_request\.number\s*\}\}\s+cancel-in-progress:\s+true/,
+    );
+    expect(workflowYaml).not.toMatch(/pull_request_target|workflow_dispatch/);
+    expect(workflowYaml).toContain(
+      "github.event.pull_request.head.repo.full_name == github.repository",
+    );
+    expect(workflowYaml).toContain("vars.AI_REVIEW_ENABLED == 'true'");
+    expect(workflowYaml).toContain("github.event.label.name == 'ai-cr:review'");
+    expect(workflowYaml).toContain("ref: ${{ github.event.pull_request.base.sha }}");
+    expect(workflowYaml).toContain("persist-credentials: false");
+    expect(workflowYaml).toContain("node-version-file: .nvmrc");
+    expect(workflowYaml).toMatch(/uses: actions\/checkout@[a-f0-9]{40}/);
+    expect(workflowYaml).toMatch(/uses: actions\/setup-node@[a-f0-9]{40}/);
+    expect(workflowYaml).toContain("uses: ./");
+    expect(workflowYaml).toContain("steps.review.outputs.verdict == 'fail'");
+
+    const permissions = workflowYaml.match(/^permissions:\n((?:\x20{2}[^\n]+\n)+)/m)?.[1];
+    expect(permissions).toBe("  contents: read\n  pull-requests: write\n  issues: write\n");
+  });
+
   it("passes title, body, and diff as data and creates a marked comment and missing labels", async () => {
     const harness = createHarness({
       issueLabels: ["ai-cr:failed"],
@@ -172,7 +209,7 @@ describe("GitHub review action runner", () => {
 
   it("updates one marked comment, removes the opposite label, consumes retry, then exposes fail", async () => {
     const harness = createHarness({
-      comments: [{ id: 55, body: "Old summary\n<!-- ai-cr-review -->" }],
+      comments: [{ id: 55, body: "Old summary\n<!-- ai-cr-review -->", user: { login: "github-actions[bot]" } }],
       issueLabels: ["ai-cr:passed", "ai-cr:review"],
       existingRepositoryLabels: ["ai-cr:review"],
     });
@@ -195,6 +232,7 @@ describe("GitHub review action runner", () => {
     const commentUpdate = harness.records.find(
       (record) => record.method === "PATCH" && record.path === "/repos/octo-org/example/issues/comments/55",
     );
+    expect(harness.records.filter((record) => record.path.includes("/comments?"))).toHaveLength(1);
     const updatedBody = JSON.parse(commentUpdate?.body ?? "{}").body as string;
     expect(updatedBody).toContain("## AI code review: fail");
     expect(updatedBody).toContain("| Implementation correctness | 8 / 10 |");
@@ -225,6 +263,28 @@ describe("GitHub review action runner", () => {
     expect(output).toEqual(["fail"]);
   });
 
+  it("does not overwrite a user-authored comment containing the review marker", async () => {
+    const harness = createHarness({
+      comments: [{ id: 56, body: "User note\n<!-- ai-cr-review -->", user: { login: "contributor" } }],
+      existingRepositoryLabels: ["ai-cr:passed"],
+    });
+
+    await runGithubReview({
+      env,
+      fetch: harness.fetchMock,
+      runReviewer: async () => validReview,
+      writeOutput: () => undefined,
+    });
+
+    expect(harness.records.some((record) => record.method === "PATCH")).toBe(false);
+    expect(harness.records).toContainEqual(
+      expect.objectContaining({
+        method: "POST",
+        path: "/repos/octo-org/example/issues/42/comments",
+      }),
+    );
+  });
+
   it("does not publish a verdict when an API operation fails", async () => {
     const harness = createHarness({
       issueLabels: [],
@@ -250,6 +310,53 @@ describe("GitHub review action runner", () => {
     expect(output).toEqual([]);
   });
 
+  it("fails visibly after the bounded comment search without creating a duplicate", async () => {
+    const harness = createHarness({
+      comments: Array.from({ length: 100 }, (_, id) => ({
+        id,
+        body: "Unrelated comment",
+        user: { login: "contributor" },
+      })),
+    });
+    const output: string[] = [];
+
+    await expect(
+      runGithubReview({
+        env,
+        fetch: harness.fetchMock,
+        runReviewer: async () => validReview,
+        writeOutput: (verdict) => {
+          output.push(verdict);
+        },
+      }),
+    ).rejects.toThrow("Review comment search limit exceeded.");
+
+    expect(harness.records.filter((record) => record.path.includes("/comments?"))).toHaveLength(10);
+    expect(harness.records.some((record) => record.method === "POST" || record.method === "PATCH")).toBe(false);
+    expect(output).toEqual([]);
+  });
+
+  it("does not publish a review when the PR head changes during the model call", async () => {
+    const harness = createHarness({
+      latestHeadSha: "b".repeat(40),
+    });
+    const output: string[] = [];
+
+    await expect(
+      runGithubReview({
+        env,
+        fetch: harness.fetchMock,
+        runReviewer: async () => validReview,
+        writeOutput: (verdict) => {
+          output.push(verdict);
+        },
+      }),
+    ).rejects.toThrow("Pull request changed during review.");
+
+    expect(harness.records.some((record) => record.method === "POST" || record.method === "PATCH")).toBe(false);
+    expect(output).toEqual([]);
+  });
+
   it("redacts credentials from operational error messages", () => {
     expect(
       describeOperationalError(
@@ -263,6 +370,77 @@ describe("GitHub review action runner", () => {
         env,
       ),
     ).not.toContain(env.OPENROUTER_API_KEY);
+  });
+
+  it("rejects oversized reviewer input before starting the child process", async () => {
+    const spawnMock = vi.fn() as unknown as typeof spawn;
+    await expect(
+      runReviewerCli(
+        { title: "title", body: "", diff: "x".repeat(1024 * 1024) },
+        { apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL },
+        {},
+        spawnMock,
+      ),
+    ).rejects.toThrow("Reviewer input exceeds the 1 MiB limit.");
+    expect(spawnMock).not.toHaveBeenCalled();
+  });
+
+  it("terminates the reviewer when stdout exceeds its limit", async () => {
+    const child = new MockChildProcess();
+    child.stdin.on("finish", () => {
+      child.stdout.write("x".repeat(1024 * 1024 + 1));
+    });
+    const spawnMock = vi.fn(() => child as unknown as ReturnType<typeof spawn>) as unknown as typeof spawn;
+
+    await expect(
+      runReviewerCli(
+        { title: "title", body: "", diff: "" },
+        { apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL },
+        {},
+        spawnMock,
+      ),
+    ).rejects.toThrow("Reviewer stdout exceeds the 1 MiB limit.");
+    expect(child.killed).toBe(true);
+  });
+
+  it("terminates the reviewer when stderr exceeds its limit", async () => {
+    const child = new MockChildProcess();
+    child.stdin.on("finish", () => {
+      child.stderr.write("x".repeat(16 * 1024 + 1));
+    });
+    const spawnMock = vi.fn(() => child as unknown as ReturnType<typeof spawn>) as unknown as typeof spawn;
+
+    await expect(
+      runReviewerCli(
+        { title: "title", body: "", diff: "" },
+        { apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL },
+        {},
+        spawnMock,
+      ),
+    ).rejects.toThrow("Reviewer stderr exceeds the 16 KiB limit.");
+    expect(child.killed).toBe(true);
+  });
+
+  it("terminates the reviewer when it exceeds the execution timeout", async () => {
+    vi.useFakeTimers();
+    const child = new MockChildProcess();
+    const spawnMock = vi.fn(() => child as unknown as ReturnType<typeof spawn>) as unknown as typeof spawn;
+    try {
+      const reviewPromise = runReviewerCli(
+        { title: "title", body: "", diff: "" },
+        { apiKey: env.OPENROUTER_API_KEY, model: env.OPENROUTER_MODEL },
+        {},
+        spawnMock,
+      );
+      const timeoutAssertion = expect(reviewPromise).rejects.toThrow(
+        "Reviewer process timed out after 10 minutes.",
+      );
+      await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+      await timeoutAssertion;
+      expect(child.killed).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("keeps action commands static and passes hostile PR text to the reviewer over stdin", async () => {
@@ -320,6 +498,7 @@ class MockChildProcess extends EventEmitter {
   stdout = new PassThrough();
   stderr = new PassThrough();
   stdinData = "";
+  killed = false;
 
   constructor() {
     super();
@@ -327,5 +506,11 @@ class MockChildProcess extends EventEmitter {
     this.stdin.on("data", (chunk: string) => {
       this.stdinData += chunk;
     });
+  }
+
+  kill(): boolean {
+    this.killed = true;
+    queueMicrotask(() => this.emit("close", null, "SIGTERM"));
+    return true;
   }
 }
