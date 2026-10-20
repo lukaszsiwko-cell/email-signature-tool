@@ -14,14 +14,17 @@ export default tseslint.config(
     files: ["**/*.ts"],
     languageOptions: {
       globals: globals.node,
-    },
-    rules: {
-      "no-undef": "off",
-    },
-    parser: tseslint.parser,
+      parser: tseslint.parser,
       parserOptions: {
         tsconfigRootDir: __dirname,
         project: ['./tsconfig.json'],
       },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
+    rules: {
+      "no-undef": "off",
+    },
   },
 );
