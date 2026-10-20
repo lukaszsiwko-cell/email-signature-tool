@@ -655,6 +655,13 @@ const steps = [
       const thunderbirdHtml = artifacts?.thunderbirdInstaller
         ? thunderbirdHtmlFromInstaller(artifacts.thunderbirdInstaller)
         : "";
+      const launcherCommandMatch =
+        typeof artifacts?.thunderbirdLauncher === "string"
+          ? /-EncodedCommand ([A-Za-z0-9+/=]+)/.exec(artifacts.thunderbirdLauncher)
+          : null;
+      const launcherCommand = launcherCommandMatch
+        ? Buffer.from(launcherCommandMatch[1], "base64").toString("utf16le")
+        : "";
       const body = artifacts
         ? `${artifacts.outlookHtml}\n${artifacts.thunderbirdInstaller}\n${thunderbirdHtml}`
         : res.body;
@@ -667,10 +674,10 @@ const steps = [
         artifacts.outlookHtml.includes("&amp; Support") &&
         artifacts.outlookHtml.includes("data:image/svg+xml;base64,") &&
         artifacts.thunderbirdInstaller.includes("mail.identity.") &&
-        artifacts.thunderbirdInstaller.includes("Press Enter to check again") &&
-        artifacts.thunderbirdLauncher.includes("Unblock-File") &&
-        artifacts.thunderbirdLauncher.includes("-Scope Process -ExecutionPolicy RemoteSigned") &&
-        artifacts.thunderbirdLauncher.includes("MachinePolicy") &&
+        artifacts.thunderbirdInstaller.includes("Naciśnij Enter, aby sprawdzić ponownie") &&
+        launcherCommand.includes("Unblock-File") &&
+        launcherCommand.includes("-Scope Process -ExecutionPolicy RemoteSigned") &&
+        launcherCommand.includes("MachinePolicy") &&
         !artifacts.thunderbirdInstaller.includes("<script>") &&
         !body.includes("supabase.co") &&
         !body.includes("storage/v1/object");
