@@ -1,6 +1,10 @@
 import eslint from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
   { ignores: ["node_modules/**", "package-lock.json"] },
@@ -14,5 +18,10 @@ export default tseslint.config(
     rules: {
       "no-undef": "off",
     },
+    parser: tseslint.parser,
+      parserOptions: {
+        tsconfigRootDir: __dirname,
+        project: ['./tsconfig.json'],
+      },
   },
 );
