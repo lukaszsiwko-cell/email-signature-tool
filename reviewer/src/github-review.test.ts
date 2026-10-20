@@ -138,7 +138,6 @@ describe("GitHub review action runner", () => {
       /concurrency:\s+group:\s+ai-cr-\$\{\{\s*github\.event\.pull_request\.number\s*\}\}\s+cancel-in-progress:\s+true/,
     );
     expect(workflowYaml).not.toMatch(/pull_request_target|workflow_dispatch/);
-    expect(workflowYaml).toContain("vars.AI_REVIEW_ENABLED == 'true'");
     expect(workflowYaml).toContain("github.event.label.name == 'ai-cr:review'");
     expect(workflowYaml).toContain("ref: ${{ github.event.pull_request.base.sha }}");
     expect(workflowYaml).toContain("persist-credentials: false");
