@@ -202,38 +202,26 @@ Readiness: [specific blockers or "ready to proceed"]
 Do not claim setup is complete if there are remaining auth, access, API, binding, or write-permission failures.
 <!-- BEGIN @przeprogramowani/10x-cli -->
 
-## 10xDevs AI Toolkit - Module 3, Lesson 4 (E2E Tests)
+## 10xDevs AI Toolkit - Module 5, Lesson 2 (Team Agent with SDKs)
 
-**For E2E tests, use the two M3L4 skills in this order:**
+Build a minimal code-review agent: diff in, structured JSON verdict out. The schema and system prompt are the contract everything later (CI gate, evals) depends on.
 
-1. **`/10x-e2e-setup`** — one-time setup: Playwright config (`webServer`,
-   auth `setup` project, `storageState`), a green seed test, and `context/foundation/test-stack.md`.
-2. **`/10x-e2e`** — the per-risk loop: risk → explore the running app with
-   `playwright-cli` → generate → review against the five anti-patterns →
-   re-prompt by name → verify with a deliberate break.
+```
+review schema + system prompt -> review.ts (ready-made agent SDK or AI SDK ToolLoopAgent) -> git diff | npx tsx review.ts
+```
 
-The skills' `references/` carry the full rules, anti-patterns, seed pattern, and
-prompt-template.
+### Task Router - Where to start
 
-A few hard rules that hold even before you invoke the skill:
+| Skill / prompt / template | Use it when |
+| --- | --- |
+| `m5l2-review-schema.ts.template` (config templates) | Starting the reviewer. Copy it into your reviewer package: six scored criteria (1-10), verdict and summary as a zod schema plus the system prompt. |
+| `m5l2-agent` (prompts) | Setting up the AI SDK entry point and then planning a modular `ToolLoopAgent` reviewer with `/10x-plan`. |
+| `/10x-plan` -> `/10x-implement` | Turning the single-file reviewer into reusable modules. |
 
-- **Locators:** `getByRole` / `getByLabel` / `getByText` first; `getByTestId`
-  only when accessibility attributes are ambiguous. Never CSS selectors, XPath,
-  or DOM structure.
-- **Never `page.waitForTimeout()`.** Wait for state: `toBeVisible()`,
-  `waitForURL()`, `waitForResponse()`.
-- **Test independence + cleanup.** Each test runs standalone — its own setup,
-  action, assertion, and cleanup; unique ids (timestamp suffix) so parallel runs
-  and re-runs don't collide.
+### Hard rules
 
-Two boundaries to keep straight:
-
-- **DOM (snapshot) is the default.** Vision (`--caps=vision`) is a supplement for
-  visual-only risks (layout, z-index, animation); for pixel regression prefer
-  deterministic tools (`toHaveScreenshot`, Argos, Lost Pixel). VLM model
-  selection/cost is a debugging topic (Lesson 5), not testing.
-- **A red test is a signal, not a chore.** A changed selector → update the
-  locator in a reviewed diff. A changed business behavior → the test caught a
-  bug; never edit the assertion to match it. Fixing failing tests is Lesson 5.
+- **The schema is the contract.** Change criteria, verdict values or field names in the schema first, then in prompts, gates and evals.
+- **Pin major versions.** The lesson code targets AI SDK 7 (`ai@7`, `@openrouter/ai-sdk-provider@3`) and Node 22+.
+- **Track cost per run.** Log usage from every review and set a hard budget cap before the agent runs unattended.
 
 <!-- END @przeprogramowani/10x-cli -->

@@ -57,6 +57,14 @@ npm run dev
 - `npm run format` - Run Prettier
 - `npm run smoke` - Smoke test the auth flow against a running server (`BASE_URL`, defaults to `http://localhost:4321`)
 
+`npx astro check` checks the Astro application. The isolated [AI reviewer](./reviewer/README.md)
+is excluded from the root TypeScript project and checked separately in CI:
+
+```bash
+npm ci --prefix reviewer
+npm run typecheck --prefix reviewer
+```
+
 ## Project Structure
 
 ```md
@@ -173,6 +181,20 @@ By default Supabase requires email confirmation before a user can sign in. To sk
 
 Users can then sign in immediately after sign-up without clicking a confirmation link.
 
+### Polish account activation email
+
+Account activation messages are sent by Supabase Auth, separately from the signature-delivery Resend client. The Polish template is stored in `supabase/templates/confirmation.html` and configured for local Supabase in `supabase/config.toml`. Local email confirmation remains disabled by default.
+
+For a hosted production Supabase project:
+
+1. Open **Authentication → Email Templates → Confirm signup** in the Supabase dashboard.
+2. Set the subject to `Aktywuj konto w generatorze podpisów e-mail`.
+3. Paste the contents of `supabase/templates/confirmation.html` into the message body and save.
+4. Keep `{{ .ConfirmationURL }}` unchanged: Supabase generates the actual activation URL.
+5. Test a new signup and verify the Polish email and activation link.
+
+Deploying the Cloudflare Worker or applying database migrations does not update hosted Supabase email templates.
+
 ### Auth routes
 
 | Route                 | Description                                                             |
@@ -232,6 +254,10 @@ BASE_URL=http://localhost:4321 npm run smoke
 ```
 
 It needs a reachable Supabase instance (local or cloud) with email confirmation disabled.
+Supabase Storage must also be running: the smoke tests upload, replace, download,
+and remove department logos. Do not exclude `storage-api` when starting local
+Supabase for these tests. Apply the repository migrations to create the private
+`department-logos` bucket and its access policies.
 
 > **Note:** this script exists primarily to guard the development of the starter itself — it is a fast sanity check that dependency upgrades did not break the build, the Cloudflare adapter or the Supabase auth flow. It is **not** a substitute for a real test suite. Once you build your own product on top of this starter, add proper tests (unit, integration, end-to-end) suited to your application.
 

@@ -2,9 +2,7 @@ import type { createClient } from "@/lib/supabase";
 import type { EmployeeDTO } from "@/types";
 import { getDepartmentLogoAsset } from "@/lib/services/departments";
 import { generateSignatureArtifacts } from "@/lib/services/signatures";
-
 type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
-
 const DELIVERY_TTL_MS = 24 * 60 * 60 * 1000;
 
 function toHex(bytes: Uint8Array): string {
@@ -54,6 +52,10 @@ async function getEmployeeDepartmentId(supabase: SupabaseClient, employeeId: str
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (typeof data.department_id !== "string") {
+    throw new Error("Employee department lookup did not return a department id");
   }
 
   return data.department_id;

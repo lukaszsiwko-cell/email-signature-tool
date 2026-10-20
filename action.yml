@@ -1,0 +1,41 @@
+name: AI Reviewer
+description: Run the team's code review agent
+
+branding:
+  icon: terminal
+  color: purple
+
+inputs:
+  pr-number:
+    description: Pull request number to review
+    required: true
+  github-token:
+    description: Token used to read pull request data and update its comment and labels
+    required: true
+  openrouter-key:
+    description: OpenRouter API key used by the reviewer
+    required: true
+  model:
+    description: OpenRouter model identifier
+    required: true
+
+outputs:
+  verdict:
+    description: Validated pass/fail verdict from the reviewer
+    value: ${{ steps.agent.outputs.verdict }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install reviewer dependencies
+      shell: bash
+      run: npm ci --include=dev --prefix "$GITHUB_ACTION_PATH/reviewer"
+    - name: Run review
+      id: agent
+      shell: bash
+      run: npm exec --prefix "$GITHUB_ACTION_PATH/reviewer" -- tsx "$GITHUB_ACTION_PATH/reviewer/src/github-review.ts"
+      env:
+        PR_NUMBER: ${{ inputs.pr-number }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        OPENROUTER_API_KEY: ${{ inputs.openrouter-key }}
+        OPENROUTER_MODEL: ${{ inputs.model }}
