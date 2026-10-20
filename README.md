@@ -57,6 +57,14 @@ npm run dev
 - `npm run format` - Run Prettier
 - `npm run smoke` - Smoke test the auth flow against a running server (`BASE_URL`, defaults to `http://localhost:4321`)
 
+`npx astro check` checks the Astro application. The isolated [AI reviewer](./reviewer/README.md)
+is excluded from the root TypeScript project and checked separately in CI:
+
+```bash
+npm ci --prefix reviewer
+npm run typecheck --prefix reviewer
+```
+
 ## Project Structure
 
 ```md
