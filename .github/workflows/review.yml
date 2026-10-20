@@ -18,7 +18,6 @@ jobs:
   review:
     if: >-
       ${{
-        github.event.pull_request.head.repo.full_name == github.repository &&
         vars.AI_REVIEW_ENABLED == 'true' &&
         (github.event.action != 'labeled' || github.event.label.name == 'ai-cr:review')
       }}
